@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant - Home Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-pills {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-pill {
+            padding: 12px 24px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-pill:hover, .nav-pill.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chat-main {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-content {
+            background: #e2e8f0;
+            color: #2d3748;
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .chat-sidebar {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .example-questions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .example-btn {
+            padding: 12px 15px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .example-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .quick-action {
+            padding: 20px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 20px;
+            background: #e2e8f0;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            width: fit-content;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-main {
+                height: 500px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-robot"></i> AI Assistant</h1>
+            <p>Your intelligent home companion with access to weather, plants, tasks, and more</p>
+            
+            <nav class="nav-pills">
+                <a href="index.html" class="nav-pill"><i class="fas fa-home"></i> Home</a>
+                <a href="weather.html" class="nav-pill"><i class="fas fa-cloud-sun"></i> Weather</a>
+                <a href="plants.html" class="nav-pill"><i class="fas fa-seedling"></i> Plants</a>
+                <a href="ai.html" class="nav-pill active"><i class="fas fa-robot"></i> AI Assistant</a>
+                <a href="system.html" class="nav-pill"><i class="fas fa-cog"></i> System</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="chat-container">
+                <div class="chat-main">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                Hello! I'm your AI assistant. I have access to your weather data, plant database, task schedule, and can help with general questions. What would you like to know?
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your home, weather, plants, or tasks...">
+                        <button class="send-btn" id="sendBtn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-sidebar">
+                    <div class="sidebar-section">
+                        <h3><i class="fas fa-lightbulb"></i> Example Questions</h3>
+                        <div class="example-questions">
+                            <button class="example-btn" onclick="askExample('What\'s the weather like today and should I water my plants?')">
+                                What's the weather like and should I water my plants?
+                            </button>
+                            <button class="example-btn" onclick="askExample('What tasks do I have scheduled for this week?')">
+                                What tasks do I have scheduled for this week?
+                            </button>
+                            <button class="example-btn" onclick="askExample('Tell me about my most expensive plants')">
+                                Tell me about my most expensive plants
+                            </button>
+                            <button class="example-btn" onclick="askExample('Should I plant anything based on the current weather forecast?')">
+                                Should I plant anything based on the forecast?
+                            </button>
+                            <button class="example-btn" onclick="askExample('Help me plan my garden activities for next week')">
+                                Help me plan my garden activities for next week
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3><i class="fas fa-database"></i> Available Data</h3>
+                        <div style="font-size: 0.9rem; color: #4a5568; line-height: 1.6;">
+                            <p><i class="fas fa-cloud-sun" style="color: #667eea;"></i> Real-time weather data</p>
+                            <p><i class="fas fa-seedling" style="color: #48bb78;"></i> Complete plant database</p>
+                            <p><i class="fas fa-tasks" style="color: #ed8936;"></i> Task schedules & reminders</p>
+                            <p><i class="fas fa-bell" style="color: #9f7aea;"></i> System notifications</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-action" onclick="askExample('Give me a summary of today')">
+                    <i class="fas fa-calendar-day"></i><br>
+                    Today's Summary
+                </button>
+                <button class="quick-action" onclick="askExample('What plants need attention?')">
+                    <i class="fas fa-leaf"></i><br>
+                    Plant Care Check
+                </button>
+                <button class="quick-action" onclick="askExample('Weather forecast for gardening')">
+                    <i class="fas fa-cloud-rain"></i><br>
+                    Gardening Weather
+                </button>
+                <button class="quick-action" onclick="askExample('Create a maintenance schedule')">
+                    <i class="fas fa-clipboard-list"></i><br>
+                    Maintenance Plan
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Mock data for demonstration
+        const mockData = {
+            weather: {
+                current: "Sunny, 72°F",
+                forecast: "Clear skies for the next 3 days, perfect for gardening"
+            },
+            tasks: [
+                "Water tomatoes - Today",
+                "Check plant fertilizer - Tomorrow",
+                "Prune roses - This weekend"
+            ],
+            plants: [
+                { name: "Tomatoes", cost: "$25", status: "Thriving" },
+                { name: "Roses", cost: "$45", status: "Needs pruning" },
+                { name: "Herbs", cost: "$15", status: "Ready to harvest" }
+            ]
+        };
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-${isUser ? 'user' : 'robot'}"></i>
+                </div>
+                <div class="message-content">
+                    ${content}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() {
+            typingIndicator.style.display = 'flex';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTyping() {
+            typingIndicator.style.display = 'none';
+        }
+
+        function generateAIResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            // Weather responses
+            if (message.includes('weather') || message.includes('forecast')) {
+                return `Based on the current weather data: ${mockData.weather.current}. ${mockData.weather.forecast}. This is great weather for outdoor plant care!`;
+            }
+            
+            // Task responses
+            if (message.includes('task') || message.includes('schedule')) {
+                return `Here are your upcoming tasks:\n${mockData.tasks.map(task => `• ${task}`).join('\n')}\n\nWould you like me to help you organize these better?`;
+            }
+            
+            // Plant responses
+            if (message.includes('plant') || message.includes('garden')) {
+                return `Your plant summary:\n${mockData.plants.map(plant => `• ${plant.name}: ${plant.status} (Cost: ${plant.cost})`).join('\n')}\n\nBased on the current weather, now would be a good time for watering and general maintenance.`;
+            }
+            
+            // Expensive plants
+            if (message.includes('expensive') || message.includes('cost')) {
+                const sortedPlants = [...mockData.plants].sort((a, b) => 
+                    parseInt(b.cost.replace('$', '')) - parseInt(a.cost.replace('$', ''))
+                );
+                return `Your most expensive plants:\n${sortedPlants.map((plant, i) => `${i + 1}. ${plant.name} - ${plant.cost}`).join('\n')}\n\nTotal investment: $${sortedPlants.reduce((sum, plant) => sum + parseInt(plant.cost.replace('$', '')), 0)}`;
+            }
+            
+            // Planning responses
+            if (message.includes('plan') || message.includes('week')) {
+                return `Based on your data, here's a suggested weekly plan:\n\n**Monday**: Water tomatoes, check soil moisture\n**Wednesday**: Fertilize plants if needed\n**Friday**: Prune roses, harvest herbs\n**Weekend**: General garden maintenance\n\nWeather looks perfect for all these activities!`;
+            }
+            
+            // Summary responses
+            if (message.includes('summary') || message.includes('today')) {
+                return `**Today's Summary:**\n\n🌤️ **Weather**: ${mockData.weather.current}\n\n🌱 **Plants**: ${mockData.plants.length} plants total, ${mockData.plants.filter(p => p.status.includes('Thriving')).length} thriving\n\n📋 **Tasks**: ${mockData.tasks.filter(t => t.includes('Today')).length} tasks due today\n\n✨ **Recommendation**: Perfect day for plant care activities!`;
+            }
+            
+            // Default response
+            return `I'd be happy to help you with that! I have access to your weather data, plant database, and task schedule. Could you be more specific about what you'd like to know? For example, you could ask about:\n\n• Current weather and plant care recommendations\n• Your upcoming tasks and schedules\n• Plant statistics and care advice\n• Planning garden activities`;
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            addMessage(message, true);
+            chatInput.value = '';
+            
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                const response = generateAIResponse(message);
+                addMessage(response);
+            }, 1500 + Math.random() * 1000);
+        }
+
+        function askExample(question) {
+            chatInput.value = question;
+            sendMessage();
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Auto-focus input
+        chatInput.focus();
+    </script>
+</body>
+</html>

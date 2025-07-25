@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  unified-stack:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: selfhosted-unified
+    hostname: unified-stack
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "8111:80"     # NGINX main site and WordPress on /wordpress
+      - "8133:8000"   # Python API backend
+      - "8144:8080"   # Java backend
+      - "8123:8123"   # ChromaDB
+      - "11444:11434" # Ollama
+      - "5000:5000"   # Flask proxy
+    volumes:
+      - ./src:/usr/share/nginx/html:ro
+      - ./python-backend:/app/python-backend:rw
+      - ./java-backend:/app/java-backend:ro
+      - chroma_data:/data/chroma:rw
+      - mysql_data:/data/mysql:rw
+      - ollama_data:/root/.ollama:rw
+      - logs:/var/log:rw
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h
+      - PYTHONUNBUFFERED=1
+      - JAVA_OPTS=-Xmx1g -Xms512m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on: []
+    networks:
+      - unified-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  chroma_data:
+    driver: local
+  mysql_data:
+    driver: local
+  ollama_data:
+    driver: local
+  logs:
+    driver: local
+
+networks:
+  unified-network:
+    driver: bridge

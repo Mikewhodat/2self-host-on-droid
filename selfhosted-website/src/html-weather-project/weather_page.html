@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Center - Home Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .weather-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .current-weather {
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+        
+        .temperature {
+            font-size: 4em;
+            font-weight: bold;
+            color: #0984e3;
+            margin: 20px 0;
+        }
+        
+        .condition {
+            font-size: 1.5em;
+            color: #636e72;
+            margin-bottom: 20px;
+        }
+        
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .weather-detail {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .detail-label {
+            font-size: 0.9em;
+            color: #636e72;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2d3436;
+        }
+        
+        .forecast-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-name {
+            font-weight: bold;
+            color: #2d3436;
+        }
+        
+        .day-temp {
+            font-size: 1.2em;
+            color: #0984e3;
+        }
+        
+        .weather-alert {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .user-message {
+            background: #0984e3;
+            color: white;
+            margin-left: 50px;
+        }
+        
+        .ai-message {
+            background: #e2e8f0;
+            color: #2d3436;
+            margin-right: 50px;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+        }
+        
+        @media (max-width: 768px) {
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .current-weather {
+                grid-column: 1;
+            }
+            
+            .temperature {
+                font-size: 3em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="nav-back">← Back to Dashboard</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🌤️ Weather Center</h1>
+            <p>Current conditions and forecast</p>
+        </div>
+        
+        <div id="weather-alert" class="weather-alert" style="display: none;">
+            <h3>⚠️ Weather Alert</h3>
+            <p id="alert-message"></p>
+        </div>
+        
+        <div class="weather-grid">
+            <div class="weather-card current-weather">
+                <h2>Current Weather</h2>
+                <div class="temperature" id="current-temp">72°F</div>
+                <div class="condition" id="current-condition">Partly Cloudy</div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <div class="detail-label">Humidity</div>
+                        <div class="detail-value" id="humidity">45%</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-label">Wind</div>
+                        <div class="detail-value" id="wind">8 mph NW</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-label">Pressure</div>
+                        <div class="detail-value" id="pressure">30.15 in</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-label">UV Index</div>
+                        <div class="detail-value" id="uv-index">3</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="refreshWeather()">🔄 Refresh Weather</button>
+            </div>
+            
+            <div class="weather-card">
+                <h3>📅 7-Day Forecast</h3>
+                <div id="forecast-list">
+                    <!-- Forecast items will be populated here -->
+                </div>
+            </div>
+            
+            <div class="weather-card">
+                <h3>📊 Weather Insights</h3>
+                <div id="weather-insights">
+                    <p>🌱 Great weather for outdoor activities!</p>
+                    <p>💧 Consider watering plants - humidity is moderate</p>
+                    <p>☀️ UV index is moderate - sunscreen recommended</p>
+                </div>
+                <button class="btn" onclick="generateInsights()">Generate New Insights</button>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <h3>🤖 Weather AI Assistant</h3>
+            <div class="chat-messages" id="weather-chat">
+                <div class="message ai-message">
+                    Hello! I'm your weather AI assistant. Ask me anything about the current weather, forecast, or how it might affect your daily activities!
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chat-input" placeholder="Ask about weather..." onkeypress="handleChatInput(event)">
+                <button class="btn" onclick="sendWeatherMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Weather data
+        let weatherData = {
+            current: {
+                temperature: 72,
+                condition: "Partly Cloudy",
+                humidity: 45,
+                wind: "8 mph NW",
+                pressure: "30.15 in",
+                uvIndex: 3
+            },
+            forecast: [
+                { day: "Today", high: 75, low: 58, condition: "Partly Cloudy" },
+                { day: "Tomorrow", high: 78, low: 61, condition: "Sunny" },
+                { day: "Friday", high: 73, low: 55, condition: "Scattered Showers" },
+                { day: "Saturday", high: 69, low: 52, condition: "Cloudy" },
+                { day: "Sunday", high: 71, low: 54, condition: "Partly Sunny" },
+                { day: "Monday", high: 74, low: 57, condition: "Sunny" },
+                { day: "Tuesday", high: 76, low: 59, condition: "Mostly Sunny" }
+            ],
+            alerts: []
+        };
+
+        // Initialize weather display
+        function initWeather() {
+            updateCurrentWeather();
+            updateForecast();
+            checkWeatherAlerts();
+        }
+
+        function updateCurrentWeather() {
+            document.getElementById('current-temp').textContent = `${weatherData.current.temperature}°F`;
+            document.getElementById('current-condition').textContent = weatherData.current.condition;
+            document.getElementById('humidity').textContent = `${weatherData.current.humidity}%`;
+            document.getElementById('wind').textContent = weatherData.current.wind;
+            document.getElementById('pressure').textContent = weatherData.current.pressure;
+            document.getElementById('uv-index').textContent = weatherData.current.uvIndex;
+        }
+
+        function updateForecast() {
+            const forecastList = document.getElementById('forecast-list');
+            forecastList.innerHTML = weatherData.forecast.map(day => `
+                <div class="forecast-item">
+                    <div>
+                        <div class="day-name">${day.day}</div>
+                        <div style="color: #636e72; font-size: 0.9em;">${day.condition}</div>
+                    </div>
+                    <div class="day-temp">
+                        ${day.high}° / ${day.low}°
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function checkWeatherAlerts() {
+            const alertDiv = document.getElementById('weather-alert');
+            const alertMessage = document.getElementById('alert-message');
+            
+            if (weatherData.alerts && weatherData.alerts.length > 0) {
+                alertMessage.textContent = weatherData.alerts[0];
+                alertDiv.style.display = 'block';
+            } else {
+                alertDiv.style.display = 'none';
+            }
+        }
+
+        function refreshWeather() {
+            // Simulate weather data refresh
+            const temps = [68, 70, 72, 74, 76, 78, 80];
+            const conditions = ["Sunny", "Partly Cloudy", "Cloudy", "Light Rain", "Clear"];
+            
+            weatherData.current.temperature = temps[Math.floor(Math.random() * temps.length)];
+            weatherData.current.condition = conditions[Math.floor(Math.random() * conditions.length)];
+            weatherData.current.humidity = Math.floor(Math.random() * 40) + 40;
+            
+            updateCurrentWeather();
+            addChatMessage('ai', `Weather updated! Current temperature: ${weatherData.current.temperature}°F, ${weatherData.current.condition}`);
+        }
+
+        function generateInsights() {
+            const insights = [
+                "🌱 Perfect weather for planting new seeds!",
+                "🏃‍♂️ Great running weather - comfortable temperature and low humidity",
+                "🌂 Keep an umbrella handy - chance of rain later",
+                "☀️ UV levels are rising - protect your skin",
+                "🌡️ Temperature dropping tonight - bring plants inside",
+                "💨 Windy conditions - secure outdoor furniture",
+                "🌿 High humidity - excellent for tropical plants"
+            ];
+            
+            const randomInsights = insights.sort(() => 0.5 - Math.random()).slice(0, 3);
+            document.getElementById('weather-insights').innerHTML = randomInsights.map(insight => `<p>${insight}</p>`).join('');
+        }
+
+        // Weather chat functionality
+        function addChatMessage(sender, message) {
+            const chatMessages = document.getElementById('weather-chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendWeatherMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addChatMessage('user', message);
+                input.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const response = generateWeatherResponse(message);
+                    addChatMessage('ai', response);
+                }, 1000);
+            }
+        }
+
+        function generateWeatherResponse(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            if (lowerQuery.includes('temperature') || lowerQuery.includes('temp')) {
+                return `The current temperature is ${weatherData.current.temperature}°F with ${weatherData.current.condition.toLowerCase()} conditions.`;
+            } else if (lowerQuery.includes('rain') || lowerQuery.includes('storm')) {
+                return "Based on the forecast, there's a chance of scattered showers on Friday. Keep an umbrella handy!";
+            } else if (lowerQuery.includes('plant') || lowerQuery.includes('garden')) {
+                return `With current humidity at ${weatherData.current.humidity}% and ${weatherData.current.condition.toLowerCase()} conditions, it's a good day for garden activities. Consider watering if humidity drops below 40%.`;
+            } else if (lowerQuery.includes('tomorrow')) {
+                const tomorrow = weatherData.forecast[1];
+                return `Tomorrow's forecast: ${tomorrow.condition} with a high of ${tomorrow.high}°F and low of ${tomorrow.low}°F.`;
+            } else if (lowerQuery.includes('week') || lowerQuery.includes('forecast')) {
+                return "This week looks varied - sunny days mid-week with possible showers on Friday. Overall pleasant weather for outdoor activities!";
+            } else {
+                return `Current conditions: ${weatherData.current.temperature}°F and ${weatherData.current.condition.toLowerCase()}. The forecast shows ${weatherData.forecast[1].condition.toLowerCase()} weather tomorrow. What specific weather information would you like to know?`;
+            }
+        }
+
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                sendWeatherMessage();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initWeather);
+    </script>
+</body>
+</html>
