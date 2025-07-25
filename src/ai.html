@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    File: ai.html
+    Purpose: The AI Dashboard page for Mike's Cyber Matrix, providing a local ChatGPT-like interface integrated with Ollama for real-time AI interactions, with a sidebar for chat history and file uploads.
+
+    Frontend Functionality:
+    - Displays a cyberpunk-themed chat interface with a matrix rain background and neon effects.
+    - Sidebar shows chat history with search functionality, allowing users to load or delete chats.
+    - Supports file uploads (text, PDF, images) to include in AI queries.
+    - Auto-growing textarea with character count and typing indicator.
+    - Context menu for copying or flagging messages.
+    - Feedback system (thumbs up/down) for AI responses.
+    - Streams AI responses for a dynamic chat experience.
+    - Full navigation to 'Home' and 'Projects' pages.
+
+    Backend Service Requirements:
+    - ChromaDB Collections: 'chats' (chat history), 'feedback' (user feedback), 'flags' (flagged messages).
+    - API Endpoints:
+      - GET /api/chats: Retrieve chat history [{ id, title, date, messages: [{ role, content }] }].
+      - POST /api/chats: Save new chat { title, date, messages }.
+      - DELETE /api/chats/{id}: Delete chat.
+      - POST /api/feedback: Save feedback { chatId, content, feedback: 'up'|'down', timestamp }.
+      - POST /api/flags: Save flagged message { content, flagged: true, timestamp }.
+      - POST /api/ollama/chat: Send AI query to Ollama { model, messages }, returns { message: { content } }.
+      - POST /api/files: Process uploaded files { file: base64, type }, returns { text }.
+    - Dependencies: Ollama API (http://localhost:11434), ChromaDB client, Tailwind CSS, Marked.js, backend server to handle API requests and file processing.
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mike's AI Dashboard - Local ChatGPT Interface">
+  <meta name="keywords" content="AI, Ollama, chatbot, local AI">
+  <title>Mike's AI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #00FFFF;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    #matrix-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+    }
+    .neon-cyan { color: #00FFFF; text-shadow: 0 0 6px #00FFFF, 0 0 12px #00FFFF; }
+    .neon-magenta { color: #FF00FF; text-shadow: 0 0 6px #FF00FF, 0 0 12px #FF00FF; }
+    .neon-orange { color: #FFAA00; text-shadow: 0 0 6px #FFAA00, 0 0 12px #FFAA00; }
+    .neon-white { color: #F5F5F5; text-shadow: 0 0 6px #F5F5F5; }
+    .glitch { animation: glitch 1.3s infinite; }
+    @keyframes glitch {
+      0%, 20%, 40%, 60%, 80% { transform: translate(0); }
+      10% { transform: translate(2px, 0); }
+      30% { transform: translate(-2px, 0); }
+    }
+    .sidebar { background: rgba(0, 0, 20, 0.9); border-right: 1px solid #FF00FF; }
+    .chat-message { margin: 10px 0; padding: 10px; border-radius: 4px; }
+    .chat-user { background: rgba(0, 255, 255, 0.2); }
+    .chat-assistant { background: rgba(255, 0, 255, 0.2); }
+    .chat-system { background: rgba(255, 170, 0, 0.2); }
+    .input-container { background: rgba(0, 0, 20, 0.9); border-top: 1px solid #FF00FF; }
+    .context-menu { background: rgba(0, 0, 20, 0.9); border: 1px solid #FF00FF; }
+    header { background: rgba(0, 0, 20, 0.9); border-bottom: 1px solid #FF00FF; }
+    footer { background: rgba(0, 0, 20, 0.9); border-top: 1px solid #FF00FF; }
+    nav a { margin: 0 10px; }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+  <canvas id="matrix-bg"></canvas>
+  <header class="p-4 text-center">
+    <h1 class="neon-cyan glitch text-3xl">Mike's AI Dashboard</h1>
+    <nav class="mt-2">
+      <a href="index.html" class="neon-cyan hover:neon-orange">Home</a>
+      <a href="projects.html" class="neon-cyan hover:neon-orange">Projects</a>
+      <a href="ai.html" class="neon-cyan hover:neon-orange">AI Dashboard</a>
+    </nav>
+  </header>
+  <div class="flex flex-1 overflow-hidden">
+    <aside id="sidebar" class="sidebar w-64 flex flex-col p-4 transition-all duration-300 md:w-64 max-md:w-16 max-md:absolute max-md:left-0 max-md:h-full max-md:z-10">
+      <button id="toggle-sidebar" class="md:hidden neon-orange mb-4">☰</button>
+      <button id="new-chat" class="neon-magenta hover:neon-orange mb-4 p-2 rounded border border-[#FF00FF] flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        New Chat
+      </button>
+      <input id="search-chats" type="text" placeholder="Search chats..." class="neon-white bg-[rgba(0,0,20,0.8)] border-[#00FFFF] border p-2 rounded mb-4 w-full">
+      <div id="chat-history" class="flex-1 overflow-y-auto"></div>
+    </aside>
+    <main class="flex-1 flex flex-col relative">
+      <div class="p-4 bg-[rgba(0,0,20,0.8)] border-b border-[#FF00FF]">
+        <input id="ollama-url" type="text" placeholder="Ollama URL (e.g., http://localhost:11434)" value="http://localhost:11434" class="neon-white bg-[rgba(0,0,20,0.8)] border-[#00FFFF] border p-2 rounded w-full mb-2">
+        <select id="ai-model" class="neon-white bg-[rgba(0,0,20,0.8)] border-[#00FFFF] border p-2 rounded w-full">
+          <option value="">Select Model</option>
+        </select>
+        <input id="file-upload" type="file" accept=".txt,.pdf,.jpg,.png" multiple class="neon-white mt-2">
+      </div>
+      <div id="chat-window" class="flex-1 overflow-y-auto p-4"></div>
+      <div class="input-container p-4 fixed bottom-0 left-0 right-0 md:left-64">
+        <div class="relative max-w-4xl mx-auto">
+          <textarea id="ai-input" placeholder="Ask the AI..." class="neon-white bg-[rgba(0,0,20,0.8)] border-[#00FFFF] border p-2 rounded w-full resize-none"></textarea>
+          <div class="absolute bottom-2 right-2 flex items-center">
+            <span id="token-count" class="neon-white text-sm mr-2">0 chars</span>
+            <button id="stop-generating" class="neon-magenta hover:neon-orange p-1 hidden">Stop</button>
+            <button id="submit-chat" class="neon-magenta hover:neon-orange p-1">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+            </button>
+          </div>
+          <span id="typing-indicator" class="neon-white text-sm absolute bottom-[-20px] left-2 hidden">Typing...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+  <footer class="p-4 text-center">
+    <p class="neon-white">© 2025 Mike's Cyber Matrix. All Rights Reserved.</p>
+    <p>
+      <a href="https://github.com/Mikewhodat" class="neon-cyan hover:neon-orange">GitHub</a>
+      <a href="https://www.linkedin.com/in/mikewhodat/" class="neon-cyan hover:neon-orange">LinkedIn</a>
+      <a href="mailto:laurenmichaeljones2@gmail.com" class="neon-cyan hover:neon-orange">Email</a>
+    </p>
+  </footer>
+  <script>
+    // Matrix Rain Background
+    (function() {
+      const canvas = document.getElementById('matrix-bg');
+      const ctx = canvas.getContext('2d');
+      let w, h, cols, drops;
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
+      const fontSize = 14;
+      const colors = ['#00FFFF', '#FF00FF', '#FFAA00'];
+      function resizeCanvas() {
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        cols = Math.floor(w / fontSize);
+        drops = Array(cols).fill(0).map(() => Math.random() * h);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, w, h);
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      let mx = 0, my = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      function drawRain() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < cols; i++) {
+          ctx.font = `${fontSize}px Courier New`;
+          ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+          const x = i * fontSize;
+          const y = drops[i];
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, y);
+          drops[i] += fontSize;
+          if (drops[i] > h) drops[i] = 0;
+          const dx = mx - x;
+          const dy = my - y;
+          if (Math.sqrt(dx * dx + dy * dy) < 120) drops[i] -= 15;
+        }
+      }
+      function animateRain() {
+        drawRain();
+        requestAnimationFrame(animateRain);
+      }
+      animateRain();
+    })();
+
+    // Sidebar Toggle
+    let isSidebarOpen = false;
+    document.getElementById('toggle-sidebar').addEventListener('click', () => {
+      isSidebarOpen = !isSidebarOpen;
+      document.getElementById('sidebar').classList.toggle('-left-64', !isSidebarOpen);
+    });
+
+    // Auto-growing Textarea
+    const textarea = document.getElementById('ai-input');
+    textarea.addEventListener('input', () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+      document.getElementById('token-count').textContent = `${textarea.value.length} chars`;
+    });
+
+    // Typing Indicator
+    textarea.addEventListener('input', () => {
+      const indicator = document.getElementById('typing-indicator');
+      indicator.classList.remove('hidden');
+      clearTimeout(textarea.timeout);
+      textarea.timeout = setTimeout(() => indicator.classList.add('hidden'), 1000);
+    });
+
+    // Submit on Enter, Shift+Enter for newline
+    textarea.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAI();
+      }
+    });
+    document.getElementById('submit-chat').addEventListener('click', sendAI);
+
+    // Fetch Ollama Models
+    async function fetchModels() {
+      const url = document.getElementById('ollama-url').value || 'http://localhost:11434';
+      const select = document.getElementById('ai-model');
+      try {
+        const response = await fetch(`${url}/api/tags`);
+        if (!response.ok) throw new Error('Failed to fetch models');
+        const data = await response.json();
+        select.innerHTML = '<option value="">Select Model</option>';
+        data.models.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model.name;
+          option.textContent = model.name;
+          select.appendChild(option);
+        });
+      } catch (e) {
+        console.error('Failed to fetch models:', e);
+        select.innerHTML = '<option value="">Error: Cannot fetch models</option>';
+        document.getElementById('chat-window').innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Error: ${e.message}</p></div>`;
+        scrollToBottom();
+      }
+    }
+    document.getElementById('ollama-url').addEventListener('change', fetchModels);
+    fetchModels();
+
+    // Chat History
+    async function displayChatHistory(filter = '') {
+      const historyDiv = document.getElementById('chat-history');
+      try {
+        const response = await fetch('/api/chats');
+        if (!response.ok) throw new Error('Failed to fetch chats');
+        const chats = await response.json();
+        historyDiv.innerHTML = chats
+          .filter(chat => !filter || chat.title.toLowerCase().includes(filter.toLowerCase()) || chat.messages.some(m => m.content.toLowerCase().includes(filter.toLowerCase())))
+          .map(chat => `
+            <div class="chat-message p-2 hover:bg-[rgba(255,0,255,0.1)] cursor-pointer neon-white">
+              <p class="neon-cyan">${chat.title} (${chat.date})</p>
+              <button onclick="loadChat('${chat.id}')" class="neon-magenta hover:neon-orange p-1">Load</button>
+              <button onclick="deleteChat('${chat.id}')" class="neon-magenta hover:neon-orange p-1">Delete</button>
+            </div>
+          `).join('');
+      } catch (e) {
+        historyDiv.innerHTML = `<p class="neon-white">Error: ${e.message}</p>`;
+      }
+    }
+    window.loadChat = async function(id) {
+      const window = document.getElementById('chat-window');
+      try {
+        const response = await fetch(`/api/chats/${id}`);
+        if (!response.ok) throw new Error('Failed to load chat');
+        const chat = await response.json();
+        window.innerHTML = chat.messages.map(m => `
+          <div class="chat-message ${m.role === 'user' ? 'chat-user' : m.role === 'assistant' ? 'chat-assistant' : 'chat-system'}" oncontextmenu="showContextMenu(event, '${m.content}')">
+            <p class="neon-white">${m.role === 'user' ? 'You' : m.role === 'assistant' ? 'AI' : 'System'}: ${marked.parse(m.content)}</p>
+            ${m.role === 'assistant' ? `
+              <div class="flex gap-2 mt-2">
+                <button onclick="regenerateMessage('${id}')" class="neon-magenta hover:neon-orange p-1">Regenerate</button>
+                <button onclick="copyMessage('${m.content}')" class="neon-magenta hover:neon-orange p-1">Copy</button>
+                <button onclick="thumbsUp('${id}', '${m.content}')" class="neon-magenta hover:neon-orange p-1">👍</button>
+                <button onclick="thumbsDown('${id}', '${m.content}')" class="neon-magenta hover:neon-orange p-1">👎</button>
+              </div>` : ''}
+          </div>
+        `).join('');
+        scrollToBottom();
+      } catch (e) {
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Error: ${e.message}</p></div>`;
+        scrollToBottom();
+      }
+    };
+    window.deleteChat = async function(id) {
+      try {
+        const response = await fetch(`/api/chats/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete chat');
+        displayChatHistory(document.getElementById('search-chats').value);
+        document.getElementById('chat-window').innerHTML = '';
+      } catch (e) {
+        console.error('Error deleting chat:', e);
+      }
+    };
+    window.regenerateMessage = async function(id) {
+      try {
+        const chat = await (await fetch(`/api/chats/${id}`)).json();
+        const messages = chat.messages.slice(0, -1);
+        await sendMessage(messages, id);
+      } catch (e) {
+        console.error('Error regenerating message:', e);
+      }
+    };
+    window.copyMessage = function(content) {
+      navigator.clipboard.writeText(content);
+      const window = document.getElementById('chat-window');
+      window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Message copied to clipboard.</p></div>`;
+      scrollToBottom();
+    };
+    window.thumbsUp = async function(id, content) {
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: id, content, feedback: 'up', timestamp: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error('Failed to save feedback');
+        const window = document.getElementById('chat-window');
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Feedback recorded (thumbs up).</p></div>`;
+        scrollToBottom();
+      } catch (e) {
+        console.error('Error saving feedback:', e);
+      }
+    };
+    window.thumbsDown = async function(id, content) {
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: id, content, feedback: 'down', timestamp: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error('Failed to save feedback');
+        const window = document.getElementById('chat-window');
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Feedback recorded (thumbs down).</p></div>`;
+        scrollToBottom();
+      } catch (e) {
+        console.error('Error saving feedback:', e);
+      }
+    };
+
+    // Search Chats
+    document.getElementById('search-chats').addEventListener('input', e => {
+      displayChatHistory(e.target.value);
+    });
+
+    // New Chat
+    document.getElementById('new-chat').addEventListener('click', () => {
+      document.getElementById('chat-window').innerHTML = '';
+      textarea.value = '';
+      document.getElementById('token-count').textContent = '0 chars';
+    });
+
+    // Context Menu
+    function showContextMenu(e, content) {
+      e.preventDefault();
+      const menu = document.createElement('div');
+      menu.className = 'context-menu absolute p-2 rounded neon-white';
+      menu.style.top = `${e.clientY}px`;
+      menu.style.left = `${e.clientX}px`;
+      menu.innerHTML = `
+        <button onclick="copyMessage('${content}')" class="block w-full text-left p-1 hover:bg-[rgba(255,0,255,0.1)]">Copy</button>
+        <button onclick="flagMessage('${content}')" class="block w-full text-left p-1 hover:bg-[rgba(255,0,255,0.1)]">Flag</button>`;
+      document.body.appendChild(menu);
+      document.addEventListener('click', () => menu.remove(), { once: true });
+    }
+    window.flagMessage = async function(content) {
+      try {
+        const response = await fetch('/api/flags', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, flagged: true, timestamp: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error('Failed to flag message');
+        const window = document.getElementById('chat-window');
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Message flagged.</p></div>`;
+        scrollToBottom();
+      } catch (e) {
+        console.error('Error flagging message:', e);
+      }
+    };
+
+    // Scroll to Bottom
+    function scrollToBottom() {
+      const window = document.getElementById('chat-window');
+      window.scrollTop = window.scrollHeight;
+    }
+
+    // Send AI Message
+    let isGenerating = false;
+    async function sendMessage(messages, chatId) {
+      if (isGenerating) return;
+      const url = document.getElementById('ollama-url').value || 'http://localhost:11434';
+      const model = document.getElementById('ai-model').value;
+      const input = textarea.value;
+      const files = document.getElementById('file-upload').files;
+      const window = document.getElementById('chat-window');
+      if (!model || !input) {
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Please select a model and enter a message.</p></div>`;
+        scrollToBottom();
+        return;
+      }
+      let content = input;
+      for (let file of files) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const response = await fetch('/api/files', {
+            method: 'POST',
+            body: formData
+          });
+          if (!response.ok) throw new Error(`Failed to process ${file.name}`);
+          const data = await response.json();
+          content += `\n[Uploaded ${file.name}: ${data.text}]`;
+        } catch (e) {
+          console.error('Error processing file:', e);
+        }
+      }
+      messages.push({ role: 'user', content });
+      window.innerHTML += `<div class="chat-message chat-user"><p class="neon-white">You: ${marked.parse(content)}</p></div>`;
+      scrollToBottom();
+      isGenerating = true;
+      document.getElementById('stop-generating').classList.remove('hidden');
+      try {
+        const response = await fetch(`${url}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages })
+        });
+        if (!response.ok) throw new Error('Failed to connect to Ollama');
+        const data = await response.json();
+        const reply = data.message.content;
+        await streamResponse(reply);
+        messages.push({ role: 'assistant', content: reply });
+        const newChat = {
+          title: input.slice(0, 30),
+          date: new Date().toISOString(),
+          messages
+        };
+        await fetch('/api/chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newChat)
+        });
+        displayChatHistory();
+      } catch (e) {
+        window.innerHTML += `<div class="chat-message chat-system"><p class="neon-white">System: Error: ${e.message}</p></div>`;
+        scrollToBottom();
+      }
+      isGenerating = false;
+      document.getElementById('stop-generating').classList.add('hidden');
+      textarea.value = '';
+      document.getElementById('file-upload').value = '';
+      document.getElementById('token-count').textContent = '0 chars';
+    }
+    window.sendAI = function() {
+      sendMessage([], 'current');
+    };
+
+    // Stream Response
+    async function streamResponse(text) {
+      const window = document.getElementById('chat-window');
+      const div = document.createElement('div');
+      div.className = 'chat-message chat-assistant';
+      const p = document.createElement('p');
+      p.className = 'neon-white';
+      div.appendChild(p);
+      window.appendChild(div);
+      const words = text.split(' ');
+      for (let i = 0; i < words.length; i++) {
+        if (!isGenerating) break;
+        p.innerHTML = marked.parse(words.slice(0, i + 1).join(' '));
+        scrollToBottom();
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      div.innerHTML += `
+        <div class="flex gap-2 mt-2">
+          <button onclick="regenerateMessage('current')" class="neon-magenta hover:neon-orange p-1">Regenerate</button>
+          <button onclick="copyMessage('${text}')" class="neon-magenta hover:neon-orange p-1">Copy</button>
+          <button onclick="thumbsUp('current', '${text}')" class="neon-magenta hover:neon-orange p-1">👍</button>
+          <button onclick="thumbsDown('current', '${text}')" class="neon-magenta hover:neon-orange p-1">👎</button>
+        </div>`;
+    }
+
+    // Stop Generating
+    document.getElementById('stop-generating').addEventListener('click', () => {
+      isGenerating = false;
+      document.getElementById('stop-generating').classList.add('hidden');
+    });
+
+    // Initial Chat History
+    displayChatHistory();
+  </script>
+</body>
+</html>

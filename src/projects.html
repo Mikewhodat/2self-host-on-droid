@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mike's Project Archive - Full Stack & AI Specialist">
+  <meta name="keywords" content="AI, IoT, web development, projects">
+  <title>Mike's Project Archive</title>
+  <!--
+    File: projects.html
+    Purpose: The project archive page for Mike's Cyber Matrix, showcasing projects, weather updates and detailed reports via Ollama konsumer/weather:latest, a Python code editor, blog, plant management, and smart garden dashboard.
+
+    Frontend Functionality:
+    - Cyberpunk-themed interface with matrix rain background and neon effects.
+    - Projects section lists all projects with tags and links to external resources.
+    - Weather section fetches current weather, 2-day forecast, and a detailed report for Elizabeth, CO using konsumer/weather:latest via Ollama.
+    - Python code editor allows running and linting Python code (via backend).
+    - Blog system supports creating, editing, and deleting posts, stored in ChromaDB.
+    - Plant management system tracks plants with name, type, notes, and last watered timestamp.
+    - Smart garden dashboard displays real-time garden stats (irrigation, temp, moisture, light).
+    - Full navigation to 'Home' and 'AI Dashboard' pages.
+
+    Backend Service Requirements:
+    - ChromaDB Collections: 'projects' (project details), 'blog' (blog posts), 'plants' (plant data), 'garden' (garden stats).
+    - API Endpoints:
+      - GET /api/projects: Retrieve project list [{ id, title, description, tags, links }].
+      - POST /api/projects: Add a project for testing.
+      - GET /api/weather/current?location=Elizabeth,CO: Fetch current weather { temp, condition, humidity, wind }.
+      - GET /api/weather/forecast?location=Elizabeth,CO: Fetch 2-day forecast [{ day, temp, condition }].
+      - GET /api/weather/report?location=Elizabeth,CO: Fetch detailed weather report { report }.
+      - POST /api/blog: Save blog post { title, content, date }.
+      - GET /api/blog: Retrieve blog posts [{ id, title, content, date }].
+      - PUT /api/blog/{id}: Update blog post { title, content, date }.
+      - DELETE /api/blog/{id}: Delete blog post.
+      - POST /api/plants: Save plant data { name, type, notes, lastWatered }.
+      - GET /api/plants: Retrieve plant list [{ id, name, type, notes, lastWatered }].
+      - PUT /api/plants/{id}: Update plant data.
+      - DELETE /api/plants/{id}: Delete plant.
+      - GET /api/garden: Fetch garden stats { irrigation, temp, moisture, light }.
+      - POST /api/code/run: Run Python code { code }, returns { output }.
+      - POST /api/code/lint: Lint Python code { code }, returns { errors }.
+    - Dependencies: ChromaDB client, FastAPI backend, Ollama with konsumer/weather:latest, Python execution environment.
+  -->
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #00FFFF;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      overflow-y: auto;
+    }
+    #matrix-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+    }
+    .neon-cyan { color: #00FFFF; text-shadow: 0 0 6px #00FFFF, 0 0 12px #00FFFF; }
+    .neon-magenta { color: #FF00FF; text-shadow: 0 0 6px #FF00FF, 0 0 12px #FF00FF; }
+    .neon-orange { color: #FFAA00; text-shadow: 0 0 6px #FFAA00, 0 0 12px #FFAA00; }
+    .neon-white { color: #F5F5F5; text-shadow: 0 0 6px #F5F5F5; }
+    .glitch { animation: glitch 1.3s infinite; }
+    @keyframes glitch {
+      0%, 20%, 40%, 60%, 80% { transform: translate(0); }
+      10% { transform: translate(2px, 0); }
+      30% { transform: translate(-2px, 0); }
+    }
+    .section {
+      background: rgba(0, 0, 20, 0.8);
+      border: 1px solid #FF00FF;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 1100px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    a { color: #00FFFF; text-decoration: none; }
+    a:hover { color: #FFAA00; }
+    .lock-toggle { cursor: pointer; color: #FFAA00; font-size: 18px; margin: 10px 0; }
+    .tag { background: rgba(255, 0, 255, 0.3); padding: 6px 12px; border-radius: 4px; font-size: 14px; }
+    input, textarea {
+      width: 100%;
+      background: rgba(0, 0, 20, 0.8);
+      border: 1px solid #00FFFF;
+      color: #00FFFF;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    button {
+      background: #FF00FF;
+      color: #00FFFF;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #FFAA00; }
+    .editable[contenteditable="true"] { border: 2px dashed #FFAA00; }
+    header, footer { background: rgba(0, 0, 20, 0.9); padding: 15px; text-align: center; }
+    nav a { margin: 0 10px; }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-bg"></canvas>
+  <header>
+    <h1 class="neon-cyan glitch">Mike's Project Archive</h1>
+    <nav>
+      <a href="index.html" class="neon-cyan">Home</a>
+      <a href="projects.html" class="neon-cyan">Projects</a>
+      <a href="ai.html" class="neon-cyan">AI Dashboard</a>
+    </nav>
+  </header>
+  <main class="section">
+    <section id="projects">
+      <h2 class="neon-magenta glitch">All Projects</h2>
+      <span class="lock-toggle" data-for="projects-text">🔓</span>
+      <div id="projects-text" class="editable" contenteditable="false"></div>
+    </section>
+    <section id="weather">
+      <h2 class="neon-magenta glitch">Weather Center</h2>
+      <span class="lock-toggle" data-for="weather-text">🔓</span>
+      <div id="weather-text" class="editable" contenteditable="false">
+        <div class="grid">
+          <div class="section">
+            <h3 class="neon-cyan">Current Weather (Elizabeth, CO)</h3>
+            <p class="neon-white" id="current-weather">Loading...</p>
+            <button onclick="updateWeather()">Refresh</button>
+          </div>
+          <div class="section">
+            <h3 class="neon-cyan">2-Day Forecast</h3>
+            <p class="neon-white" id="forecast">Loading...</p>
+          </div>
+          <div class="section">
+            <h3 class="neon-cyan">Weather Report</h3>
+            <p class="neon-white" id="weather-report">Loading...</p>
+            <button onclick="updateWeather()">Refresh</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="code">
+      <h2 class="neon-magenta glitch">Python Code Editor</h2>
+      <span class="lock-toggle" data-for="code-text">🔓</span>
+      <div id="code-text" class="editable" contenteditable="false">
+        <textarea id="code-input" rows="5" placeholder="Write Python code..."></textarea>
+        <div class="grid">
+          <button onclick="runCode()">Run</button>
+          <button onclick="lintCode()">Lint</button>
+        </div>
+        <p class="neon-white" id="code-output">Output: </p>
+      </div>
+    </section>
+    <section id="blog">
+      <h2 class="neon-magenta glitch">Cyber Blog</h2>
+      <span class="lock-toggle" data-for="blog-text">🔓</span>
+      <div id="blog-text" class="editable" contenteditable="false">
+        <div class="section">
+          <h3 class="neon-cyan">New Post</h3>
+          <form id="blog-form">
+            <div class="grid">
+              <input type="text" id="blog-title" placeholder="Post Title" required>
+              <textarea id="blog-content" placeholder="Post Content" required></textarea>
+              <button type="submit">Submit</button>
+            </div>
+          </form>
+        </div>
+        <div id="blog-posts" class="section"></div>
+      </div>
+    </section>
+    <section id="plants">
+      <h2 class="neon-magenta glitch">Plant Management</h2>
+      <span class="lock-toggle" data-for="plants-text">🔓</span>
+      <div id="plants-text" class="editable" contenteditable="false">
+        <div class="section">
+          <h3 class="neon-cyan">Add Plant</h3>
+          <form id="plant-form">
+            <div class="grid">
+              <input type="text" id="plant-name" placeholder="Plant Name" required>
+              <input type="text" id="plant-type" placeholder="Plant Type" required>
+              <textarea id="plant-notes" placeholder="Care Notes"></textarea>
+              <button type="submit">Add</button>
+            </div>
+          </form>
+        </div>
+        <div id="plant-list" class="section"></div>
+      </div>
+    </section>
+    <section id="garden">
+      <h2 class="neon-magenta glitch">Smart Garden Dashboard</h2>
+      <span class="lock-toggle" data-for="garden-text">🔓</span>
+      <div id="garden-text" class="editable" contenteditable="false">
+        <div class="grid">
+          <div class="section">
+            <h3 class="neon-cyan">Garden Stats</h3>
+            <p class="neon-white" id="garden-stats">Loading...</p>
+            <button onclick="updateGarden()">Refresh</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p class="neon-white">© 2025 Mike's Cyber Matrix. All Rights Reserved.</p>
+    <p>
+      <a href="https://github.com/Mikewhodat" class="neon-cyan">GitHub</a> |
+      <a href="https://www.linkedin.com/in/mikewhodat/" class="neon-cyan">LinkedIn</a> |
+      <a href="mailto:laurenmichaeljones2@gmail.com" class="neon-cyan">Email</a>
+    </p>
+  </footer>
+  <script>
+    // Matrix Rain Background
+    (function() {
+      const canvas = document.getElementById('matrix-bg');
+      const ctx = canvas.getContext('2d');
+      let w, h, cols, drops;
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
+      const fontSize = 14;
+      const colors = ['#00FFFF', '#FF00FF', '#FFAA00'];
+      function resizeCanvas() {
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        cols = Math.floor(w / fontSize);
+        drops = Array(cols).fill(0).map(() => Math.random() * h);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, w, h);
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      let mx = 0, my = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      function drawRain() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+        ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < cols; i++) {
+          ctx.font = `${fontSize}px Courier New`;
+          ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+          const x = i * fontSize;
+          const y = drops[i];
+          ctx.fillText(chars[Math.floor(Math.random() * chars.length)], x, y);
+          drops[i] += fontSize;
+          if (drops[i] > h) drops[i] = 0;
+          const dx = mx - x;
+          const dy = my - y;
+          if (Math.sqrt(dx * dx + dy * dy) < 120) drops[i] -= 15;
+        }
+      }
+      function animateRain() {
+        drawRain();
+        requestAnimationFrame(animateRain);
+      }
+      animateRain();
+    })();
+
+    // Editable Sections with ChromaDB
+    async function loadContent(sectionId) {
+      try {
+        const response = await fetch(`/api/content?section=${sectionId}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to load content: ${response.status} ${errorText}`);
+        }
+        const data = await response.json();
+        document.getElementById(sectionId).innerHTML = data.html || document.getElementById(sectionId).innerHTML;
+      } catch (e) {
+        console.error(`Error loading ${sectionId}:`, e);
+      }
+    }
+    async function saveContent(sectionId) {
+      const content = document.getElementById(sectionId).innerHTML;
+      try {
+        const response = await fetch('/api/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sectionId, html: content })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to save content: ${response.status} ${errorText}`);
+        }
+      } catch (e) {
+        console.error(`Error saving ${sectionId}:`, e);
+      }
+    }
+    document.querySelectorAll('.lock-toggle').forEach(lock => {
+      lock.addEventListener('click', () => {
+        const target = document.getElementById(lock.dataset.for);
+        const isEditable = target.getAttribute('contenteditable') === 'true';
+        target.setAttribute('contenteditable', !isEditable);
+        lock.textContent = isEditable ? '🔓' : '🔒';
+        if (!isEditable) saveContent(lock.dataset.for);
+      });
+    });
+    ['projects-text', 'weather-text', 'code-text', 'blog-text', 'plants-text', 'garden-text'].forEach(loadContent);
+
+    // Projects
+    async function loadProjects() {
+      const projectsDiv = document.getElementById('projects-text');
+      try {
+        const response = await fetch('/api/projects');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch projects: ${response.status} ${errorText}`);
+        }
+        const projects = await response.json();
+        if (projects.length === 0) {
+          projectsDiv.innerHTML = `<p class="neon-white">No projects available. Add some via the backend!</p>`;
+          return;
+        }
+        projectsDiv.innerHTML = projects.map(p => `
+          <div class="section">
+            <h3 class="neon-cyan">${p.title}</h3>
+            <p class="neon-white">${p.description}</p>
+            <div class="grid">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+            <p>${p.links.map(l => `<a href="${l.url}" class="neon-cyan">${l.label}</a>`).join(' | ')}</p>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Error fetching projects:', e);
+        projectsDiv.innerHTML = `<p class="neon-white">Error: ${e.message}</p>`;
+      }
+    }
+    loadProjects();
+
+    // Weather Center
+    async function updateWeather() {
+      const weather = document.getElementById('current-weather');
+      const forecast = document.getElementById('forecast');
+      const report = document.getElementById('weather-report');
+      try {
+        const currentResponse = await fetch('/api/weather/current?location=Elizabeth,CO');
+        if (!currentResponse.ok) {
+          const errorText = await currentResponse.text();
+          throw new Error(`Failed to fetch current weather: ${currentResponse.status} ${errorText}`);
+        }
+        const current = await currentResponse.json();
+        weather.textContent = `Temp: ${current.temp}°F | Condition: ${current.condition} | Humidity: ${current.humidity}% | Wind: ${current.wind} mph`;
+
+        const forecastResponse = await fetch('/api/weather/forecast?location=Elizabeth,CO');
+        if (!forecastResponse.ok) {
+          const errorText = await forecastResponse.text();
+          throw new Error(`Failed to fetch forecast: ${forecastResponse.status} ${errorText}`);
+        }
+        const forecastData = await forecastResponse.json();
+        forecast.innerHTML = forecastData.map(d => `${d.day}: ${d.temp}°F, ${d.condition}`).join('<br>');
+
+        const reportResponse = await fetch('/api/weather/report?location=Elizabeth,CO');
+        if (!reportResponse.ok) {
+          const errorText = await reportResponse.text();
+          throw new Error(`Failed to fetch weather report: ${reportResponse.status} ${errorText}`);
+        }
+        const reportData = await reportResponse.json();
+        report.textContent = reportData.report;
+      } catch (e) {
+        console.error('Error fetching weather:', e);
+        weather.textContent = `Error: ${e.message}`;
+        forecast.textContent = `Error: ${e.message}`;
+        report.textContent = `Error: ${e.message}`;
+      }
+    }
+    updateWeather();
+
+    // Python Code Editor
+    async function runCode() {
+      const code = document.getElementById('code-input').value;
+      const output = document.getElementById('code-output');
+      try {
+        const response = await fetch('/api/code/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to run code: ${response.status} ${errorText}`);
+        }
+        const data = await response.json();
+        output.textContent = `Output: ${data.output}`;
+      } catch (e) {
+        console.error('Error running code:', e);
+        output.textContent = `Error: ${e.message}`;
+      }
+    }
+    async function lintCode() {
+      const code = document.getElementById('code-input').value;
+      const output = document.getElementById('code-output');
+      try {
+        const response = await fetch('/api/code/lint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to lint code: ${response.status} ${errorText}`);
+        }
+        const data = await response.json();
+        output.textContent = data.errors.length ? `Lint: ${data.errors.join(', ')}` : 'Lint: No issues';
+      } catch (e) {
+        console.error('Error linting code:', e);
+        output.textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // Blog
+    const blogForm = document.getElementById('blog-form');
+    blogForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = document.getElementById('blog-title').value;
+      const content = document.getElementById('blog-content').value;
+      if (title && content) {
+        try {
+          const response = await fetch('/api/blog', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, date: new Date().toISOString() })
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to save post: ${response.status} ${errorText}`);
+          }
+          displayBlogPosts();
+          blogForm.reset();
+        } catch (e) {
+          console.error('Error saving post:', e);
+        }
+      }
+    });
+    async function displayBlogPosts() {
+      const postsDiv = document.getElementById('blog-posts');
+      try {
+        const response = await fetch('/api/blog');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch posts: ${response.status} ${errorText}`);
+        }
+        const posts = await response.json();
+        postsDiv.innerHTML = posts.map(p => `
+          <div class="section">
+            <h3 class="neon-cyan">${p.title}</h3>
+            <p class="neon-white">${p.content}</p>
+            <p class="neon-orange">${p.date}</p>
+            <button onclick="editPost('${p.id}')">Edit</button>
+            <button onclick="deletePost('${p.id}')">Delete</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Error fetching posts:', e);
+        postsDiv.innerHTML = `<p class="neon-white">Error: ${e.message}</p>`;
+      }
+    }
+    async function editPost(id) {
+      try {
+        const response = await fetch(`/api/blog/${id}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch post: ${response.status} ${errorText}`);
+        }
+        const post = await response.json();
+        document.getElementById('blog-title').value = post.title;
+        document.getElementById('blog-content').value = post.content;
+        blogForm.onsubmit = async e => {
+          e.preventDefault();
+          const title = document.getElementById('blog-title').value;
+          const content = document.getElementById('blog-content').value;
+          if (title && content) {
+            try {
+              const response = await fetch(`/api/blog/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, date: new Date().toISOString() })
+              });
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to update post: ${response.status} ${errorText}`);
+              }
+              displayBlogPosts();
+              blogForm.reset();
+              blogForm.onsubmit = null;
+            } catch (e) {
+              console.error('Error updating post:', e);
+            }
+          }
+        };
+      } catch (e) {
+        console.error('Error fetching post for edit:', e);
+      }
+    }
+    async function deletePost(id) {
+      try {
+        const response = await fetch(`/api/blog/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to delete post: ${response.status} ${errorText}`);
+        }
+        displayBlogPosts();
+      } catch (e) {
+        console.error('Error deleting post:', e);
+      }
+    }
+    displayBlogPosts();
+
+    // Plant Management
+    const plantForm = document.getElementById('plant-form');
+    plantForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('plant-name').value;
+      const type = document.getElementById('plant-type').value;
+      const notes = document.getElementById('plant-notes').value;
+      if (name && type) {
+        try {
+          const response = await fetch('/api/plants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, type, notes, lastWatered: new Date().toISOString() })
+          });
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to save plant: ${response.status} ${errorText}`);
+          }
+          displayPlants();
+          plantForm.reset();
+        } catch (e) {
+          console.error('Error saving plant:', e);
+        }
+      }
+    });
+    async function displayPlants() {
+      const plantList = document.getElementById('plant-list');
+      try {
+        const response = await fetch('/api/plants');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch plants: ${response.status} ${errorText}`);
+        }
+        const plants = await response.json();
+        plantList.innerHTML = plants.map(p => `
+          <div class="section">
+            <h3 class="neon-cyan">${p.name}</h3>
+            <p class="neon-white">Type: ${p.type}<br>Notes: ${p.notes}<br>Last Watered: ${p.lastWatered}</p>
+            <button onclick="editPlant('${p.id}')">Edit</button>
+            <button onclick="deletePlant('${p.id}')">Delete</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Error fetching plants:', e);
+        plantList.innerHTML = `<p class="neon-white">Error: ${e.message}</p>`;
+      }
+    }
+    async function editPlant(id) {
+      try {
+        const response = await fetch(`/api/plants/${id}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch plant: ${response.status} ${errorText}`);
+        }
+        const plant = await response.json();
+        document.getElementById('plant-name').value = plant.name;
+        document.getElementById('plant-type').value = plant.type;
+        document.getElementById('plant-notes').value = plant.notes;
+        plantForm.onsubmit = async e => {
+          e.preventDefault();
+          const name = document.getElementById('plant-name').value;
+          const type = document.getElementById('plant-type').value;
+          const notes = document.getElementById('plant-notes').value;
+          if (name && type) {
+            try {
+              const response = await fetch(`/api/plants/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, type, notes, lastWatered: new Date().toISOString() })
+              });
+              if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to update plant: ${response.status} ${errorText}`);
+              }
+              displayPlants();
+              plantForm.reset();
+              plantForm.onsubmit = null;
+            } catch (e) {
+              console.error('Error updating plant:', e);
+            }
+          }
+        };
+      } catch (e) {
+        console.error('Error fetching plant for edit:', e);
+      }
+    }
+    async function deletePlant(id) {
+      try {
+        const response = await fetch(`/api/plants/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to delete plant: ${response.status} ${errorText}`);
+        }
+        displayPlants();
+      } catch (e) {
+        console.error('Error deleting plant:', e);
+      }
+    }
+    displayPlants();
+
+    // Smart Garden Dashboard
+    async function updateGarden() {
+      const stats = document.getElementById('garden-stats');
+      try {
+        const response = await fetch('/api/garden');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch garden stats: ${response.status} ${errorText}`);
+        }
+        const data = await response.json();
+        stats.textContent = `Irrigation: ${data.irrigation}, Temp: ${data.temp}°F, Moisture: ${data.moisture}%, Light: ${data.light}%`;
+      } catch (e) {
+        console.error('Error fetching garden stats:', e);
+        stats.textContent = `Error: ${e.message}`;
+      }
+    }
+    updateGarden();
+  </script>
+</body>
+</html>

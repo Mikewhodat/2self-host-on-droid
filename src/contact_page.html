@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - Mike's Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #f0f0f0;
+            overflow-x: hidden;
+        }
+        
+        .neon-blue { color: #00ffff; }
+        .neon-green { color: #00ff00; }
+        .neon-pink { color: #ff00ff; }
+        .neon-purple { color: #aa00ff; }
+        .neon-orange { color: #ff8800; }
+        .neon-red { color: #ff0044; }
+        
+        .neon-glow { 
+            text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+            animation: pulse-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor; }
+            to { text-shadow: 0 0 8px currentColor, 0 0 16px currentColor, 0 0 24px currentColor; }
+        }
+        
+        .glitch {
+            position: relative;
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        .card-glow {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .card-glow:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(0, 255, 255, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .message-center {
+            background: linear-gradient(135deg, rgba(170, 0, 255, 0.1), rgba(255, 0, 255, 0.05));
+            border: 2px solid rgba(170, 0, 255, 0.3);
+            box-shadow: 0 0 30px rgba(170, 0, 255, 0.2);
+        }
+
+        .message-center:hover {
+            border-color: rgba(170, 0, 255, 0.6);
+            box-shadow: 0 0 50px rgba(170, 0, 255, 0.4);
+        }
+
+        .contact-info-hidden {
+            display: none;
+        }
+
+        .contact-request-pending {
+            background: rgba(255, 136, 0, 0.1);
+            border: 1px solid #ff8800;
+            color: #ff8800;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .nav-active {
+            color: #00ffff !important;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .typing-indicator {
+            display: none;
+            color: #00ff00;
+            margin-top: 8px;
+        }
+
+        .typing-dots::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+        }
+
+        @keyframes typing {
+            0%, 60% { content: '...'; }
+            80% { content: '..'; }
+            100% { content: '.'; }
+        }
+    </style>
+</head>
+<body class="p-4 relative">
+    <canvas class="matrix-bg" id="matrix"></canvas>
+    
+    <header class="flex justify-between items-center mb-8 relative z-10">
+        <h1 class="text-4xl font-bold neon-blue neon-glow glitch">MIKE.DEV</h1>
+        <nav>
+            <ul class="flex space-x-6">
+                <li><a href="homepage_with_login.html" class="hover:neon-green transition-all duration-300">01_HOME</a></li>
+                <li><a href="skills-page.html" class="hover:neon-pink transition-all duration-300">02_SKILLS</a></li>
+                <li><a href="projects_page.html" class="hover:neon-purple transition-all duration-300">03_PROJECTS</a></li>
+                <li><a href="resume.html" class="hover:neon-green transition-all duration-300">04_RESUME</a></li>
+                <li><a href="contact_page.html" class="nav-active hover:neon-pink transition-all duration-300">05_CONTACT</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="relative z-10">
+        <!-- Main Message Center -->
+        <section class="mb-12">
+            <h2 class="text-6xl font-bold mb-8 neon-purple neon-glow text-center">MESSAGE_CENTER</h2>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="message-center p-8 rounded-lg backdrop-filter backdrop-blur-lg">
+                    <h3 class="text-3xl font-semibold neon-blue mb-6 text-center">Send Direct Message</h3>
+                    
+                    <form id="message-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-lg mb-3 neon-green font-medium">Your Name:</label>
+                                <input type="text" id="sender-name" required class="w-full p-4 bg-black/50 border-2 border-gray-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all text-white text-lg" placeholder="Enter your name">
+                            </div>
+                            <div>
+                                <label class="block text-lg mb-3 neon-green font-medium">Your Email:</label>
+                                <input type="email" id="sender-email" required class="w-full p-4 bg-black/50 border-2 border-gray-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all text-white text-lg" placeholder="your.email@domain.com">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-lg mb-3 neon-green font-medium">Subject:</label>
+                            <input type="text" id="message-subject" required class="w-full p-4 bg-black/50 border-2 border-gray-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all text-white text-lg" placeholder="Project inquiry, collaboration, job opportunity...">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-lg mb-3 neon-green font-medium">Message:</label>
+                            <textarea rows="8" id="message-content" required class="w-full p-4 bg-black/50 border-2 border-gray-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all text-white text-lg resize-vertical" placeholder="Tell me about your project, what you need help with, or how we can work together..."></textarea>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" id="submit-btn" class="px-12 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 transition-all duration-300 rounded-lg neon-glow font-bold text-xl border-2 border-transparent hover:border-purple-400">
+                                SEND MESSAGE
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="typing-indicator" class="typing-indicator text-center">
+                        <span class="typing-dots">Sending message</span>
+                    </div>
+                    
+                    <div id="message-status" class="mt-6 text-center"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Info Request Section -->
+        <section class="mb-12">
+            <div class="max-w-2xl mx-auto text-center">
+                <h3 class="text-2xl font-semibold neon-orange mb-6">Need Direct Contact Info?</h3>
+                <p class="text-gray-300 mb-6">For phone calls or direct email, submit a request and I'll review it personally.</p>
+                
+                <div id="contact-request-section">
+                    <button id="request-contact-btn" class="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 transition-all duration-300 rounded-lg font-semibold text-lg">
+                        REQUEST CONTACT INFO
+                    </button>
+                </div>
+                
+                <div id="contact-info-section" class="contact-info-hidden mt-8">
+                    <div class="card-glow p-6 rounded-lg">
+                        <h4 class="text-xl font-semibold neon-pink mb-4">Direct Contact Information</h4>
+                        <div class="space-y-3 text-left">
+                            <div class="flex items-center justify-between p-3 bg-gray-900 rounded">
+                                <span class="neon-blue">📧 Email:</span>
+                                <a href="mailto:laurenmichaeljones2@gmail.com" class="hover:neon-green transition-colors">laurenmichaeljones2@gmail.com</a>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-900 rounded">
+                                <span class="neon-blue">📱 Phone:</span>
+                                <a href="tel:3039138222" class="hover:neon-green transition-colors">(303) 913-8222</a>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-900 rounded">
+                                <span class="neon-blue">📍 Location:</span>
+                                <span class="neon-purple">Denver, Colorado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Info -->
+        <section class="mb-12">
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card-glow p-6 rounded-lg text-center">
+                    <h4 class="text-lg font-semibold neon-green mb-3">Response Time</h4>
+                    <p class="text-gray-300">Usually within 24 hours</p>
+                </div>
+                <div class="card-glow p-6 rounded-lg text-center">
+                    <h4 class="text-lg font-semibold neon-blue mb-3">Availability</h4>
+                    <p class="text-green-400">Open for new projects</p>
+                </div>
+                <div class="card-glow p-6 rounded-lg text-center">
+                    <h4 class="text-lg font-semibold neon-pink mb-3">Best For</h4>
+                    <p class="text-gray-300">AI/ML, Web Dev, IoT</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 border-t border-gray-800 relative z-10">
+        <p class="neon-blue">&copy; 2025 Mike's Portfolio. All rights reserved.</p>
+        <p class="text-sm text-gray-500 mt-2">Built with AI, Python, React, Docker & Linux</p>
+    </footer>
+
+    <script>
+        // Matrix background effect
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+        const matrixArray = matrix.split("");
+
+        const fontSize = 10;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ffff';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Contact info request functionality
+        const requestContactBtn = document.getElementById('request-contact-btn');
+        const contactRequestSection = document.getElementById('contact-request-section');
+        const contactInfoSection = document.getElementById('contact-info-section');
+
+        requestContactBtn.addEventListener('click', () => {
+            // Show pending approval message
+            contactRequestSection.innerHTML = `
+                <div class="contact-request-pending">
+                    <h4 class="font-semibold mb-2">Contact Request Submitted</h4>
+                    <p>Your request has been sent for approval. You'll be notified once it's reviewed.</p>
+                    <div class="mt-4">
+                        <button id="approve-contact" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded mr-3">
+                            APPROVE (Admin)
+                        </button>
+                        <button id="deny-contact" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded">
+                            DENY (Admin)
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add admin approval functionality
+            document.getElementById('approve-contact').addEventListener('click', () => {
+                contactInfoSection.classList.remove('contact-info-hidden');
+                contactRequestSection.innerHTML = `
+                    <div style="background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; color: #00ff00; padding: 16px; border-radius: 8px;">
+                        ✓ Contact information approved and displayed below
+                    </div>
+                `;
+            });
+
+            document.getElementById('deny-contact').addEventListener('click', () => {
+                contactRequestSection.innerHTML = `
+                    <div style="background: rgba(255, 0, 68, 0.1); border: 1px solid #ff0044; color: #ff0044; padding: 16px; border-radius: 8px;">
+                        ✗ Contact request denied. Please use the message form above.
+                    </div>
+                `;
+            });
+        });
+
+        // Message form functionality
+        const messageForm = document.getElementById('message-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const messageStatus = document.getElementById('message-status');
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear previous status
+            messageStatus.innerHTML = '';
+            
+            // Get form data
+            const formData = {
+                name: document.getElementById('sender-name').value,
+                email: document.getElementById('sender-email').value,
+                subject: document.getElementById('message-subject').value,
+                message: document.getElementById('message-content').value
+            };
+            
+            // Show loading state
+            submitBtn.textContent = 'SENDING...';
+            submitBtn.disabled = true;
+            typingIndicator.style.display = 'block';
+            
+            try {
+                // Create proper mailto link with all form data
+                const emailBody = `From: ${formData.name}
+Email: ${formData.email}
+
+Message:
+${formData.message}
+
+---
+Sent via Mike's Portfolio Contact Form`;
+
+                const mailtoLink = `mailto:laurenmichaeljones2@gmail.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(emailBody)}`;
+                
+                // Simulate sending delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Open email client
+                window.open(mailtoLink, '_blank');
+                
+                // Show success message
+                messageStatus.innerHTML = `
+                    <div style="background: rgba(0, 255, 0, 0.1); border: 2px solid #00ff00; color: #00ff00; padding: 20px; border-radius: 8px;">
+                        <h4 style="font-size: 1.2em; margin-bottom: 8px;">✓ MESSAGE SENT SUCCESSFULLY</h4>
+                        <p>Your email client should have opened with the message. If not, please send manually to: laurenmichaeljones2@gmail.com</p>
+                        <p style="margin-top: 8px; font-size: 0.9em;">Expected response time: Within 24 hours</p>
+                    </div>
+                `;
+                
+                // Clear form
+                messageForm.reset();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                messageStatus.innerHTML = `
+                    <div style="background: rgba(255, 0, 68, 0.1); border: 2px solid #ff0044; color: #ff0044; padding: 20px; border-radius: 8px;">
+                        <h4 style="font-size: 1.2em; margin-bottom: 8px;">✗ SENDING FAILED</h4>
+                        <p>Please try again or contact directly at: laurenmichaeljones2@gmail.com</p>
+                    </div>
+                `;
+            } finally {
+                // Reset button and hide typing indicator
+                submitBtn.textContent = 'SEND MESSAGE';
+                submitBtn.disabled = false;
+                typingIndicator.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

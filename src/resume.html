@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Resume Vault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Matrix Rain Effect */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Login Section */
+        .login-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00ff00;
+            z-index: 1000;
+        }
+
+        .login-container.hidden {
+            display: none;
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff00;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .btn {
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        /* Main Interface */
+        .main-interface {
+            display: none;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .main-interface.active {
+            display: block;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px #00ff00;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .upload-section {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        .resume-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .resume-card {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 15px #00ff00;
+            transition: all 0.3s ease;
+        }
+
+        .resume-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px #00ff00;
+        }
+
+        .resume-card h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .resume-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        /* Editor Modal */
+        .editor-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 2000;
+        }
+
+        .editor-modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .editor-content {
+            background: #000;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            box-shadow: 0 0 30px #00ff00;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            min-height: 400px;
+            background: #000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .editor-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #fff;
+        }
+
+        .close-btn:hover {
+            background: #fff;
+            color: #ff0000;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .resume-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .editor-content {
+                max-width: 95%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- Login Section -->
+    <div class="login-container" id="loginContainer">
+        <h2>ACCESS MATRIX VAULT</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn">ENTER THE MATRIX</button>
+        </form>
+    </div>
+
+    <!-- Main Interface -->
+    <div class="main-interface" id="mainInterface">
+        <button class="btn logout-btn" id="logoutBtn">EXIT</button>
+        
+        <div class="header">
+            <h1>MATRIX RESUME VAULT</h1>
+            <p>Secure Resume Management System</p>
+        </div>
+
+        <div class="upload-section">
+            <h3>Upload New Resume</h3>
+            <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx,.txt" multiple>
+            <label for="fileInput" class="file-label">SELECT FILES</label>
+            <span id="fileInfo"></span>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="refreshBtn">REFRESH</button>
+            <button class="btn" id="clearAllBtn">CLEAR ALL</button>
+        </div>
+
+        <div class="resume-grid" id="resumeGrid">
+            <!-- Resume cards will be populated here -->
+        </div>
+    </div>
+
+    <!-- Editor Modal -->
+    <div class="editor-modal" id="editorModal">
+        <div class="editor-content">
+            <div class="editor-header">
+                <h3>EDIT RESUME</h3>
+                <button class="btn close-btn" id="closeEditor">CLOSE</button>
+            </div>
+            <textarea id="editorTextarea" class="editor-textarea" placeholder="Resume content will appear here..."></textarea>
+            <div class="editor-actions">
+                <button class="btn" id="saveBtn">SAVE CHANGES</button>
+                <button class="btn" id="downloadBtn">DOWNLOAD</button>
+                <button class="btn" id="printBtn">PRINT</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+        const matrixArray = matrix.split("");
+
+        const fontSize = 10;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00FF00';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 35);
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Application State
+        let resumes = [];
+        let currentEditingResume = null;
+
+        // DOM Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const mainInterface = document.getElementById('mainInterface');
+        const loginForm = document.getElementById('loginForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const resumeGrid = document.getElementById('resumeGrid');
+        const editorModal = document.getElementById('editorModal');
+        const editorTextarea = document.getElementById('editorTextarea');
+        const closeEditor = document.getElementById('closeEditor');
+        const saveBtn = document.getElementById('saveBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const printBtn = document.getElementById('printBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+
+        // Login functionality
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple authentication (in real app, use proper auth)
+            if (username === 'admin' && password === 'matrix') {
+                loginContainer.classList.add('hidden');
+                mainInterface.classList.add('active');
+                loadResumes();
+            } else {
+                alert('Access Denied! Invalid credentials.');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            loginContainer.classList.remove('hidden');
+            mainInterface.classList.remove('active');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        });
+
+        // File upload functionality
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length > 0) {
+                fileInfo.textContent = `${files.length} file(s) selected`;
+                
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const resume = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            content: e.target.result,
+                            textContent: file.type.includes('text') ? e.target.result : 'Binary file - content not editable',
+                            uploadDate: new Date().toLocaleDateString()
+                        };
+                        resumes.push(resume);
+                        renderResumes();
+                    };
+                    
+                    if (file.type.includes('text')) {
+                        reader.readAsText(file);
+                    } else {
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+
+        // Render resumes
+        function renderResumes() {
+            resumeGrid.innerHTML = '';
+            resumes.forEach(resume => {
+                const card = document.createElement('div');
+                card.className = 'resume-card';
+                card.innerHTML = `
+                    <h3>${resume.name}</h3>
+                    <p>Type: ${resume.type || 'Unknown'}</p>
+                    <p>Size: ${formatFileSize(resume.size)}</p>
+                    <p>Uploaded: ${resume.uploadDate}</p>
+                    <div class="resume-actions">
+                        <button class="btn btn-small" onclick="viewResume(${resume.id})">VIEW PDF</button>
+                        <button class="btn btn-small" onclick="editResume(${resume.id})">EDIT</button>
+                        <button class="btn btn-small" onclick="downloadResume(${resume.id})">DOWNLOAD</button>
+                        <button class="btn btn-small" onclick="printResume(${resume.id})">PRINT</button>
+                        <button class="btn btn-small close-btn" onclick="deleteResume(${resume.id})">DELETE</button>
+                    </div>
+                `;
+                resumeGrid.appendChild(card);
+            });
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Resume actions
+        function viewResume(id) {
+            const resume = resumes.find(r => r.id === id);
+            if (resume) {
+                if (resume.pdfBlob) {
+                    // Open existing PDF
+                    const url = URL.createObjectURL(resume.pdfBlob);
+                    window.open(url, '_blank');
+                } else {
+                    // Generate PDF from text content
+                    generatePDF(resume);
+                }
+            }
+        }
+
+        function generatePDF(resume) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Set up the document
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            
+            // Parse resume content
+            const lines = resume.textContent.split('\n');
+            let y = 20;
+            const margin = 20;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const maxWidth = pageWidth - 2 * margin;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line === '') {
+                    y += 5;
+                    continue;
+                }
+                
+                // Check if we need a new page
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                // Handle different sections
+                if (line.includes('PROFESSIONAL SUMMARY') || 
+                    line.includes('CORE TECHNICAL COMPETENCIES') || 
+                    line.includes('SELECT PROJECTS') || 
+                    line.includes('PROFESSIONAL EXPERIENCE') || 
+                    line.includes('EDUCATION') || 
+                    line.includes('ADDITIONAL INFORMATION')) {
+                    
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(line, margin, y);
+                    y += 10;
+                    
+                    // Add underline
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, y - 5, margin + doc.getTextWidth(line), y - 5);
+                    y += 5;
+                    
+                } else if (line.includes('|') && (line.includes('2024') || line.includes('2023') || line.includes('2015') || line.includes('2013'))) {
+                    // Job titles with dates
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "bold");
+                    const splitText = doc.splitTextToSize(line, maxWidth);
+                    doc.text(splitText, margin, y);
+                    y += splitText.length * 6;
+                    
+                } else if (line.includes('(2024') || line.includes('(2023') || line.includes('–Present)')) {
+                    // Project titles
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "bold");
+                    const splitText = doc.splitTextToSize(line, maxWidth);
+                    doc.text(splitText, margin, y);
+                    y += splitText.length * 6;
+                    
+                } else if (line.includes('Email:') || line.includes('Phone:') || line.includes('LinkedIn:') || line.includes('GitHub:')) {
+                    // Contact info
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(line, margin, y);
+                    y += 5;
+                    
+                } else if (line.match(/^[A-Z][a-z]+ [A-Z][a-z]+ "[A-Z][a-z]+" [A-Z][a-z]+$/)) {
+                    // Name (first line)
+                    doc.setFontSize(18);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(line, margin, y);
+                    y += 12;
+                    
+                } else {
+                    // Regular text
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    
+                    // Handle bullet points
+                    if (line.includes(':') && !line.includes('Email:') && !line.includes('Phone:')) {
+                        const splitText = doc.splitTextToSize(line, maxWidth);
+                        doc.text(splitText, margin, y);
+                        y += splitText.length * 5;
+                    } else {
+                        const splitText = doc.splitTextToSize(line, maxWidth);
+                        doc.text(splitText, margin + 5, y);
+                        y += splitText.length * 5;
+                    }
+                }
+                
+                y += 2;
+            }
+            
+            // Save PDF as blob
+            const pdfBlob = doc.output('blob');
+            resume.pdfBlob = pdfBlob;
+            
+            // Open PDF in new tab
+            const url = URL.createObjectURL(pdfBlob);
+            window.open(url, '_blank');
+        }
+
+        function editResume(id) {
+            currentEditingResume = resumes.find(r => r.id === id);
+            if (currentEditingResume) {
+                editorTextarea.value = currentEditingResume.textContent;
+                editorModal.classList.add('active');
+            }
+        }
+
+        function downloadResume(id) {
+            const resume = resumes.find(r => r.id === id);
+            if (resume) {
+                if (resume.pdfBlob) {
+                    // Download existing PDF
+                    const url = URL.createObjectURL(resume.pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = resume.name.replace('.txt', '.pdf');
+                    a.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    // Generate PDF first, then download
+                    generatePDFForDownload(resume);
+                }
+            }
+        }
+
+        function generatePDFForDownload(resume) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Set up the document
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            
+            // Parse resume content (same as above)
+            const lines = resume.textContent.split('\n');
+            let y = 20;
+            const margin = 20;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const maxWidth = pageWidth - 2 * margin;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line === '') {
+                    y += 5;
+                    continue;
+                }
+                
+                if (y > 270) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                if (line.includes('PROFESSIONAL SUMMARY') || 
+                    line.includes('CORE TECHNICAL COMPETENCIES') || 
+                    line.includes('SELECT PROJECTS') || 
+                    line.includes('PROFESSIONAL EXPERIENCE') || 
+                    line.includes('EDUCATION') || 
+                    line.includes('ADDITIONAL INFORMATION')) {
+                    
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(line, margin, y);
+                    y += 10;
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, y - 5, margin + doc.getTextWidth(line), y - 5);
+                    y += 5;
+                    
+                } else if (line.includes('|') && (line.includes('2024') || line.includes('2023') || line.includes('2015') || line.includes('2013'))) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "bold");
+                    const splitText = doc.splitTextToSize(line, maxWidth);
+                    doc.text(splitText, margin, y);
+                    y += splitText.length * 6;
+                    
+                } else if (line.includes('(2024') || line.includes('(2023') || line.includes('–Present)')) {
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "bold");
+                    const splitText = doc.splitTextToSize(line, maxWidth);
+                    doc.text(splitText, margin, y);
+                    y += splitText.length * 6;
+                    
+                } else if (line.includes('Email:') || line.includes('Phone:') || line.includes('LinkedIn:') || line.includes('GitHub:')) {
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(line, margin, y);
+                    y += 5;
+                    
+                } else if (line.match(/^[A-Z][a-z]+ [A-Z][a-z]+ "[A-Z][a-z]+" [A-Z][a-z]+$/)) {
+                    doc.setFontSize(18);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(line, margin, y);
+                    y += 12;
+                    
+                } else {
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    
+                    if (line.includes(':') && !line.includes('Email:') && !line.includes('Phone:')) {
+                        const splitText = doc.splitTextToSize(line, maxWidth);
+                        doc.text(splitText, margin, y);
+                        y += splitText.length * 5;
+                    } else {
+                        const splitText = doc.splitTextToSize(line, maxWidth);
+                        doc.text(splitText, margin + 5, y);
+                        y += splitText.length * 5;
+                    }
+                }
+                
+                y += 2;
+            }
+            
+            // Save PDF as blob and download
+            const pdfBlob = doc.output('blob');
+            resume.pdfBlob = pdfBlob;
+            
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = resume.name.replace('.txt', '.pdf');
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function printResume(id) {
+            const resume = resumes.find(r => r.id === id);
+            if (resume) {
+                if (resume.pdfBlob) {
+                    // Print existing PDF
+                    const url = URL.createObjectURL(resume.pdfBlob);
+                    const printWindow = window.open(url, '_blank');
+                    printWindow.onload = function() {
+                        printWindow.print();
+                    };
+                } else {
+                    // Generate PDF first, then print
+                    generatePDFForPrint(resume);
+                }
+            }
+        }
+
+        function generatePDFForPrint(resume) {
+            generatePDF(resume);
+            // PDF will open in new tab where user can print
+        }
+
+        function deleteResume(id) {
+            if (confirm('Are you sure you want to delete this resume?')) {
+                resumes = resumes.filter(r => r.id !== id);
+                renderResumes();
+            }
+        }
+
+        // Editor functionality
+        closeEditor.addEventListener('click', () => {
+            editorModal.classList.remove('active');
+            currentEditingResume = null;
+        });
+
+        saveBtn.addEventListener('click', () => {
+            if (currentEditingResume) {
+                currentEditingResume.textContent = editorTextarea.value;
+                alert('Resume updated successfully!');
+                renderResumes();
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (currentEditingResume) {
+                const blob = new Blob([editorTextarea.value], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentEditingResume.name;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        printBtn.addEventListener('click', () => {
+            if (currentEditingResume) {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>Print Resume - ${currentEditingResume.name}</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; margin: 20px; }
+                                pre { white-space: pre-wrap; word-wrap: break-word; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>${currentEditingResume.name}</h1>
+                            <pre>${editorTextarea.value}</pre>
+                        </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+            }
+        });
+
+        // Control buttons
+        refreshBtn.addEventListener('click', () => {
+            renderResumes();
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete all resumes?')) {
+                resumes = [];
+                renderResumes();
+            }
+        });
+
+        // Load resumes (placeholder for actual loading)
+        function loadResumes() {
+            // Add your resume as a sample
+            const mikeJonesResume = {
+                id: 1,
+                name: "Lauren_Michael_Jones_Resume.pdf",
+                type: "application/pdf",
+                size: 4876,
+                textContent: `Lauren Michael "Mike" Jones
+Elizabeth, Colorado  Email: laurenmichaeljones2@gmail.com  
+Phone: (303) 913-8222  
+LinkedIn: linkedin.com/in/laurenmichaeljones  
+GitHub: github.com/Mikewhodat  
+Willing to travel for remote, hybrid, or on-site opportunities
+
+PROFESSIONAL SUMMARY
+Self-taught infrastructure engineer and software developer with 10+ years as a fire suppression technician, bringing systems-level thinking and problem-solving to technical roles.  
+Proficient in containerized environments (Docker, Proxmox), AI/ML integration (Ollama, ChromaDB), and full-stack development (FastAPI, Spring Boot, React).  
+Skilled in Linux administration, IoT automation, and scalable system design, with a passion for open-source contributions.  
+Self-educated via YouTube, Coursera, and coding bootcamps, delivering production-grade, self-hosted solutions.
+
+CORE TECHNICAL COMPETENCIES
+Programming: Node.js, Python, JavaScript (ES6+), Java, TypeScript  
+Backend Frameworks: FastAPI, Spring Boot, RESTful API design  
+Infrastructure: Docker, Docker Compose, Supervisor, NGINX, Proxmox virtualization, Linux administration  
+AI & IoT: Ollama LLMs, Firecrawl web scraping, ChromaDB vector databases, real-time sensor automation  
+Systems: Linux (primary), Windows (secondary), basic macOS familiarity  
+Tools: Git, CI/CD pipelines, container orchestration, monitoring
+
+SELECT PROJECTS
+AI-Controlled IoT Watering System (2024–Present)  
+Built automated irrigation system for greenhouse/lawn using AI-driven weather data scraping (Firecrawl).  
+Integrated soil moisture sensors and rainfall prediction to optimize watering schedules.  
+Developed React front-end dashboard and FastAPI back-end, deployed via Docker on Linux server.
+
+Self-Hosted Full-Stack Portfolio Platform (2024–Present)  
+Engineered containerized platform with FastAPI (backend), Spring Boot (authentication), ChromaDB (persistence), and NGINX (proxying).  
+Hosted on bare-metal Linux using Proxmox virtualization.  
+Designed responsive React front-end for portfolio and resume display.
+
+AI Nexus Multi-Service Platform (2024–Present)  
+Created AI platform with local LLMs (Ollama), Firecrawl scraping, and RAG mechanisms.  
+Orchestrated services in a monitored Docker stack for scalability and reliability.
+
+PROFESSIONAL EXPERIENCE
+Self-Employed Developer & Open-Source Contributor
+Elizabeth, Colorado | 2024–Present  
+Lead full-stack and infrastructure projects focusing on AI integration and container orchestration.  
+Contribute to open-source repositories on GitHub in Python, JavaScript, and Java.  
+Deployed self-hosted portfolio platform with integrated front-end, back-end, and infrastructure.
+
+Fire Suppression Technician, Sprinkler Fitters Local 669 (Union)
+Various Locations (Nationwide, including Idaho, Arizona, Colorado) | 2015–2020  
+Installed/maintained fire suppression systems for contractors (Frontier Fire, Phoenix Fire, Arapaho Fire).  
+Specialized in seismic bracing and earthquake engineering for complex projects.  
+Traveled nationwide to meet project demands with flexibility and precision.  
+Reason for leaving: Transitioned to pursue infrastructure engineering and software development.
+
+Fire Suppression Technician, Rapid Fire
+Colorado | 2013–2015  
+Designed/installed fire suppression systems for commercial/residential clients in Colorado.  
+Ensured compliance with local codes, delivering projects on time and within budget.
+
+Note: Full work history available upon request.
+
+EDUCATION
+Self-Taught Software Development & Infrastructure Engineering | 2023–Present  
+Completed Coursera courses (Python for Data Science, Web Development, DevOps).  
+Participated in coding bootcamps (full-stack development, AI, containerization).  
+Studied advanced AI, IoT, and infrastructure topics via YouTube tutorials.
+
+ADDITIONAL INFORMATION
+Interests: Infrastructure engineering, AI-driven automation, machine learning, IoT, multi-content protocols, open-source development.  
+Portfolio: Developing web-based, editable resume interface for self-hosted portfolio (URL available upon completion).  
+Certifications: Seismic Restraining and Earthquake Bracing for Fire Suppression Systems (2010).  
+Travel: Open to remote, hybrid, or on-site roles; willing to travel within reason.`,
+                uploadDate: new Date().toLocaleDateString(),
+                pdfBlob: null // Will be generated when needed
+            };
+            
+            resumes.push(mikeJonesResume);
+            renderResumes();
+        }
+
+        // Close modal when clicking outside
+        editorModal.addEventListener('click', (e) => {
+            if (e.target === editorModal) {
+                editorModal.classList.remove('active');
+                currentEditingResume = null;
+            }
+        });
+    </script>
+</body>
+</html>

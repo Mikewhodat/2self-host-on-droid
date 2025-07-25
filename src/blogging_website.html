@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bytes Blog: Hard work and honesty in tech and digital innovation.">
+    <meta name="keywords" content="computing, programming, technology, innovation">
+    <title>Bytes Blog - Tech with Integrity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js" type="module"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* Retro neon aesthetic fully preserved */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+        :root {
+            --neon-pink: #ff4da6;
+            --neon-blue: #00ccff;
+            --neon-purple: #cc33ff;
+            --neon-green: #33ff99;
+        }
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #121212;
+            color: #f0f0f0;
+            overflow-x: hidden;
+            font-size: 18px;
+        }
+        .press-start { font-family: 'Press Start 2P', cursive; }
+        .neon-text-pink { color: var(--neon-pink); text-shadow: 0 0 3px var(--neon-pink); }
+        .neon-text-blue { color: var(--neon-blue); text-shadow: 0 0 3px var(--neon-blue); }
+        .neon-text-purple { color: var(--neon-purple); text-shadow: 0 0 3px var(--neon-purple); }
+        .neon-text-green { color: var(--neon-green); text-shadow: 0 0 3px var(--neon-green); }
+        .neon-border-pink { border-color: var(--neon-pink); box-shadow: 0 0 3px var(--neon-pink); }
+        .neon-border-blue { border-color: var(--neon-blue); box-shadow: 0 0 3px var(--neon-blue); }
+        .neon-border-purple { border-color: var(--neon-purple); box-shadow: 0 0 3px var(--neon-purple); }
+        .neon-border-green { border-color: var(--neon-green); box-shadow: 0 0 3px var(--neon-green); }
+        .glow-hover:hover { filter: drop-shadow(0 0 5px currentColor); }
+        .scanlines { position: relative; overflow: auto; }
+        .scanlines::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 10;
+        }
+        .terminal-cursor::after { content: "|"; animation: blink 1s step-end infinite; }
+        .typing-indicator { color: var(--neon-green); font-style: italic; }
+        @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes glitch { 0% { transform: translate(0); } 20% { transform: translate(-1px, 1px); } 40% { transform: translate(-1px, -1px); } 60% { transform: translate(1px, 1px); } 80% { transform: translate(1px, -1px); } 100% { transform: translate(0); } }
+        .glitch-effect:hover { animation: glitch 0.5s linear infinite; }
+        .pixel-grid { background-image: linear-gradient(#1a1a1a 1px, transparent 1px), linear-gradient(90deg, #1a1a1a 1px, transparent 1px); background-size: 20px 20px; }
+        input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 5px var(--neon-green); }
+    </style>
+</head>
+<body class="scanlines pixel-grid min-h-screen overflow-y-auto">
+    <!-- Header with navigation -->
+    <header class="border-b-2 neon-border-purple sticky top-0 z-50 bg-black bg-opacity-90 backdrop-blur-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <ion-icon name="terminal" class="text-3xl neon-text-green glow-hover" loading="lazy"></ion-icon>
+                <h1 class="text-2xl md:text-3xl press-start neon-text-pink">BYTES BLOG</h1>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="#home" class="neon-text-blue hover:neon-text-green text-xl glow-hover transition-colors duration-300">HOME</a>
+                <a href="#blog" class="neon-text-blue hover:neon-text-green text-xl glow-hover transition-colors duration-300">BLOG</a>
+                <a href="#ai" class="neon-text-blue hover:neon-text-green text-xl glow-hover transition-colors duration-300">AI</a>
+            </nav>
+            <button id="mobile-menu-button" class="md:hidden text-2xl neon-text-purple focus:outline-none" aria-label="Toggle mobile menu">
+                <ion-icon name="menu" loading="lazy"></ion-icon>
+            </button>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-black bg-opacity-95 border-t neon-border-blue transition-transform transform translate-y-full">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+                <a href="#home" class="neon-text-blue hover:neon-text-green text-lg glow-hover transition-colors duration-300">HOME</a>
+                <a href="#blog" class="neon-text-blue hover:neon-text-green text-lg glow-hover transition-colors duration-300">BLOG</a>
+                <a href="#ai" class="neon-text-blue hover:neon-text-green text-lg glow-hover transition-colors duration-300">AI</a>
+            </div>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-8">
+        <!-- Home section -->
+        <section id="home" class="mb-16">
+            <div class="border-2 neon-border-green p-6 rounded-lg bg-black bg-opacity-70 backdrop-blur-sm">
+                <h2 class="text-4xl md:text-6xl press-start neon-text-pink mb-4">BYTES BLOG</h2>
+                <p class="text-xl md:text-2xl neon-text-blue mb-6">Tech and digital innovation with hard work, honesty, and integrity.</p>
+                <div class="border-2 neon-border-purple p-4 mb-6">
+                    <p class="text-lg neon-text-green terminal-cursor">> Initializing systems...<br>> Ready for exploration.</p>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    <button class="px-6 py-3 bg-transparent border-2 neon-border-blue neon-text-blue hover:neon-border-green hover:neon-text-green glow-hover transition-all duration-300 press-start" onclick="document.getElementById('blog').scrollIntoView({behavior: 'smooth'})" aria-label="Explore blog posts">EXPLORE BLOG</button>
+                    <button class="px-6 py-3 bg-transparent border-2 neon-border-purple neon-text-purple hover:neon-border-green hover:neon-text-green glow-hover transition-all duration-300 press-start" onclick="document.getElementById('ai').scrollIntoView({behavior: 'smooth'})" aria-label="Try AI assistant">TRY AI</button>
+                </div>
+            </div>
+        </section>
+        <!-- Blog section with working display -->
+        <section id="blog" class="mb-16">
+            <h2 class="text-3xl md:text-4xl press-start neon-text-blue mb-8">BLOG POSTS</h2>
+            <div id="blog-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Blog posts will appear here -->
+            </div>
+            <!-- Blog creation form -->
+            <div class="border-2 neon-border-blue p-6 rounded-lg bg-black bg-opacity-70 mt-8">
+                <h3 class="text-2xl press-start neon-text-purple mb-4">ADD A NEW POST</h3>
+                <form id="blog-form" class="space-y-4">
+                    <input type="text" id="blog-title" placeholder="Blog Title" class="w-full bg-gray-900 border-2 neon-border-purple text-white px-4 py-3 focus:outline-none focus:neon-border-green" required aria-label="Enter blog title">
+                    <textarea id="blog-content" placeholder="Blog Content" rows="4" class="w-full bg-gray-900 border-2 neon-border-purple text-white px-4 py-3 focus:outline-none focus:neon-border-green" required aria-label="Enter blog content"></textarea>
+                    <div class="flex flex-wrap gap-4">
+                        <button type="button" id="spell-check" class="px-6 py-3 bg-transparent border-2 neon-border-purple neon-text-purple hover:neon-border-green hover:neon-text-green glow-hover transition-all duration-300 press-start" aria-label="Check and correct spelling">CHECK & CORRECT SPELLING</button>
+                        <button type="submit" class="px-6 py-3 bg-transparent border-2 neon-border-green neon-text-green hover:bg-black hover:bg-opacity-50 glow-hover transition-all duration-300 press-start" aria-label="Submit blog post">SUBMIT POST</button>
+                        <button type="button" id="generate-topics" class="px-6 py-3 bg-transparent border-2 neon-border-pink neon-text-pink hover:neon-border-green hover:neon-text-green glow-hover transition-all duration-300 press-start" aria-label="Generate blog topic ideas">GENERATE TOPICS</button>
+                    </div>
+                </form>
+            </div>
+            <!-- Topic ideas container -->
+            <div id="topic-ideas-container" class="mt-8 border-2 neon-border-green p-6 rounded-lg bg-black bg-opacity-70 hidden">
+                <h3 class="text-2xl press-start neon-text-blue mb-4">AI-GENERATED TOPIC IDEAS</h3>
+                <ul id="topic-ideas" class="space-y-3">
+                    <!-- Topics will appear here -->
+                </ul>
+            </div>
+        </section>
+        <!-- AI section without retro constraints -->
+        <section id="ai" class="mb-16 border-2 neon-border-green p-6 rounded-lg bg-black bg-opacity-70">
+            <h2 class="text-3xl md:text-4xl press-start neon-text-blue mb-6">ASK THE ARCHIVE AI</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <p class="text-lg neon-text-purple mb-4">Powered by a local Ollama instance, this AI specializes in technology and innovation.</p>
+                    <p class="text-lg text-gray-200 mb-4">Ask about programming, hardware, software development, or technology trends.</p>
+                    <!-- Suggested questions -->
+                    <div class="border-2 neon-border-pink p-4 rounded-lg mb-4">
+                        <p class="text-sm neon-text-green">SUGGESTED QUESTIONS:</p>
+                        <ul id="suggested-questions" class="text-gray-200 text-sm mt-2 space-y-1">
+                            <li>> How do neural networks work?</li>
+                            <li>> Explain quantum computing basics</li>
+                            <li>> Compare REST and GraphQL APIs</li>
+                            <li>> What are microservices advantages?</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-2 neon-border-blue p-4 rounded-lg bg-black bg-opacity-50">
+                    <div class="flex space-x-2 mb-4">
+                        <select id="ai-model" class="flex-1 bg-gray-900 border-2 neon-border-purple text-white px-4 py-2 focus:outline-none focus:neon-border-green" aria-label="Select AI model">
+                            <option value="">Select a model</option>
+                        </select>
+                        <button id="retry-models" class="px-4 py-2 bg-transparent border-2 neon-border-green neon-text-green hover:bg-black hover:bg-opacity-50 glow-hover transition-all duration-300" aria-label="Retry loading models">
+                            <ion-icon name="refresh" class="text-xl" loading="lazy"></ion-icon>
+                        </button>
+                    </div>
+                    <div id="chat-container" class="h-64 overflow-y-auto mb-4 space-y-3">
+                        <div class="flex">
+                            <div class="bg-gray-800 bg-opacity-70 p-3 rounded-lg max-w-[80%]">
+                                <p class="neon-text-green">ARCHIVE AI > Ready to discuss technology? Select a model and ask away.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="ai-input" placeholder="Type your question..." class="flex-1 bg-gray-900 border-2 neon-border-purple text-white px-4 py-2 focus:outline-none focus:neon-border-green" aria-label="Type your question for the AI">
+                        <button id="ai-submit" class="px-4 py-2 bg-transparent border-2 neon-border-green neon-text-green hover:bg-black hover:bg-opacity-50 glow-hover transition-all duration-300" aria-label="Send chat message">
+                            <ion-icon name="send" class="text-xl" loading="lazy"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="border-t-2 neon-border-purple mt-16 bg-black bg-opacity-90">
+        <div class="container mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <ion-icon name="terminal" class="text-3xl neon-text-green" loading="lazy"></ion-icon>
+                    <h3 class="text-xl press-start neon-text-pink">BYTES BLOG</h3>
+                </div>
+                <p class="text-sm text-gray-500">© 2025 Bytes Blog. Built with integrity to improve the world.</p>
+            </div>
+        </div>
+    </footer>
+    <script>
+        /* ==================== */
+        /* MOBILE MENU HANDLING */
+        /* ==================== */
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('translate-y-full');
+        });
+
+        /* ================= */
+        /* BLOG FUNCTIONALITY */
+        /* ================= */
+        const blogForm = document.getElementById('blog-form');
+        const blogList = document.getElementById('blog-list');
+        const spellCheckBtn = document.getElementById('spell-check');
+        const generateTopicsBtn = document.getElementById('generate-topics');
+        const topicIdeasContainer = document.getElementById('topic-ideas-container');
+        const topicIdeas = document.getElementById('topic-ideas');
+
+        // Initialize blogs from localStorage or sample data
+        function initializeBlogs() {
+            if (!localStorage.getItem('blogs')) {
+                const sampleBlogs = [
+                    {
+                        id: 1,
+                        title: "The Future of Quantum Computing",
+                        content: "Quantum computing represents a paradigm shift in computational power that could revolutionize fields from cryptography to drug discovery.",
+                        date: "2025-07-01"
+                    },
+                    {
+                        id: 2,
+                        title: "Understanding Neural Networks",
+                        content: "Neural networks form the backbone of modern AI systems, mimicking the human brain's structure to solve complex problems.",
+                        date: "2025-06-24"
+                    }
+                ];
+                localStorage.setItem('blogs', JSON.stringify(sampleBlogs));
+            }
+            displayBlogs();
+        }
+
+        // Display all blogs
+        function displayBlogs() {
+            const blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            blogList.innerHTML = '';
+            
+            blogs.forEach(blog => {
+                const article = document.createElement('article');
+                article.className = 'border-2 neon-border-blue rounded-lg overflow-hidden bg-black bg-opacity-60 hover:bg-opacity-80 transition-all duration-500';
+                article.innerHTML = `
+                    <div class="h-48 bg-gradient-to-r from-blue-800 to-cyan-600 flex items-center justify-center">
+                        <ion-icon name="document-text" class="text-6xl neon-text-pink" loading="lazy"></ion-icon>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <span class="text-xs neon-text-purple">${new Date(blog.date).toLocaleDateString()}</span>
+                            <span class="text-xs neon-text-blue">BLOG POST</span>
+                        </div>
+                        <h3 class="text-2xl neon-text-green mb-3">${blog.title}</h3>
+                        <p class="text-gray-200 mb-4">${blog.content.substring(0, 100)}...</p>
+                        <button onclick="viewFullBlog(${blog.id})" class="text-sm neon-text-blue hover:neon-text-green glow-hover">READ FULL POST →</button>
+                    </div>
+                `;
+                blogList.appendChild(article);
+            });
+        }
+
+        // Save new blog
+        function saveBlog(title, content) {
+            const blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            const newBlog = {
+                id: Date.now(),
+                title,
+                content,
+                date: new Date().toISOString()
+            };
+            
+            blogs.unshift(newBlog);
+            localStorage.setItem('blogs', JSON.stringify(blogs));
+            displayBlogs();
+        }
+
+        // View full blog
+        function viewFullBlog(id) {
+            const blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            const blog = blogs.find(b => b.id === id);
+            if (blog) {
+                alert(`BLOG: ${blog.title}\n\n${blog.content}`);
+            }
+        }
+
+        // Spell check function
+        async function checkSpelling() {
+            const contentField = document.getElementById('blog-content');
+            const content = contentField.value;
+            if (!content.trim()) return;
+            
+            try {
+                const response = await fetch('https://api.languagetool.org/v2/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        text: content,
+                        language: 'en-US',
+                        enabledOnly: 'false'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.matches && data.matches.length > 0) {
+                    alert(`Found ${data.matches.length} potential issues. Consider reviewing your text.`);
+                } else {
+                    alert('No spelling or grammar issues found!');
+                }
+            } catch (error) {
+                alert('Spell check service unavailable');
+            }
+        }
+
+        /* ==================== */
+        /* AI FUNCTIONALITY */
+        /* ==================== */
+        const aiInput = document.getElementById('ai-input');
+        const aiSubmit = document.getElementById('ai-submit');
+        const aiModelSelect = document.getElementById('ai-model');
+        const retryModelsButton = document.getElementById('retry-models');
+        const chatContainer = document.getElementById('chat-container');
+        const suggestedQuestions = document.getElementById('suggested-questions');
+        
+        // Load AI models
+        async function loadModels() {
+            try {
+                const response = await fetch('/api/ollama/tags', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load models');
+                const data = await response.json();
+                
+                aiModelSelect.innerHTML = '<option value="">Select a model</option>';
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.name;
+                    option.textContent = model.name;
+                    aiModelSelect.appendChild(option);
+                });
+            } catch (error) {
+                addMessage(`Error: Could not load models (${error.message})`, 'ai');
+            }
+        }
+
+        // Send message to AI
+        async function sendMessage() {
+            const message = aiInput.value.trim();
+            const model = aiModelSelect.value;
+            if (!message) return;
+            if (!model) {
+                addMessage('Please select a model first', 'ai');
+                return;
+            }
+
+            addMessage(message, 'user');
+            aiInput.value = '';
+
+            try {
+                const typingIndicator = addMessage('ARCHIVE AI is thinking...', 'ai', true);
+                const response = await fetch('/api/ollama/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: message,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) throw new Error('AI service unavailable');
+                const data = await response.json();
+                
+                chatContainer.removeChild(typingIndicator);
+                addMessage(data.response || 'No response from model', 'ai');
+            } catch (error) {
+                const typingIndicator = document.querySelector('.typing-indicator');
+                if (typingIndicator) chatContainer.removeChild(typingIndicator);
+                addMessage(`Error: ${error.message}`, 'ai');
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, sender, isTyping = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex';
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = `bg-gray-800 bg-opacity-70 p-3 rounded-lg max-w-[80%] ${isTyping ? 'italic text-gray-400' : ''}`;
+            const messageText = document.createElement('p');
+            messageText.className = sender === 'user' ? 'neon-text-blue' : 'neon-text-green';
+            messageText.textContent = isTyping ? text : `${sender === 'user' ? 'YOU' : 'ARCHIVE AI'} > ${text}`;
+            messageDiv.classList.add(sender === 'user' ? 'justify-end' : 'justify-start');
+            bubbleDiv.appendChild(messageText);
+            messageDiv.appendChild(bubbleDiv);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv;
+        }
+
+        /* ==================== */
+        /* TOPIC GENERATION */
+        /* ==================== */
+        async function generateTopicIdeas() {
+            const model = aiModelSelect.value;
+            if (!model) {
+                addMessage('Please select an AI model first', 'ai');
+                return;
+            }
+
+            topicIdeasContainer.classList.remove('hidden');
+            topicIdeas.innerHTML = '<li class="typing-indicator">Generating ideas...</li>';
+            
+            try {
+                const prompt = "Generate 5 blog topic ideas about technology, programming, and digital innovation. Format as a bulleted list.";
+                const response = await fetch('/api/ollama/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: prompt,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to generate topics');
+                const data = await response.json();
+                
+                // Parse response
+                const ideas = data.response.split('\n')
+                    .filter(line => line.trim().startsWith('-') || line.trim().startsWith('*'))
+                    .map(line => line.replace(/^[-*]\s+/, '').trim())
+                    .filter(line => line.length > 0)
+                    .slice(0, 5);
+                
+                // Display ideas
+                topicIdeas.innerHTML = '';
+                ideas.forEach(idea => {
+                    const li = document.createElement('li');
+                    li.className = 'neon-text-green flex items-start';
+                    li.innerHTML = `<span class="mr-2 neon-text-pink">•</span> ${idea}`;
+                    topicIdeas.appendChild(li);
+                });
+            } catch (error) {
+                topicIdeas.innerHTML = `<li class="neon-text-pink">Error: ${error.message}</li>`;
+            }
+        }
+
+        /* ==================== */
+        /* EVENT LISTENERS */
+        /* ==================== */
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeBlogs();
+            loadModels();
+            
+            // Blog form submission
+            blogForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('blog-title').value;
+                const content = document.getElementById('blog-content').value;
+                saveBlog(title, content);
+                blogForm.reset();
+            });
+            
+            // Spell check
+            spellCheckBtn.addEventListener('click', checkSpelling);
+            
+            // Topic generation
+            generateTopicsBtn.addEventListener('click', generateTopicIdeas);
+            
+            // AI chat
+            aiSubmit.addEventListener('click', sendMessage);
+            aiInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            retryModelsButton.addEventListener('click', loadModels);
+            
+            // Smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
