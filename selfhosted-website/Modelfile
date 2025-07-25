@@ -1,8 +1,0 @@
-FROM codeqwen:7b
-
-PARAMETER temperature 0.2
-PARAMETER num_ctx 4096
-PARAMETER top_k 40
-PARAMETER top_p 0.9
-
-TRAINING DATA ./finetune_data.jsonl
